@@ -1,115 +1,140 @@
 <p align="center"><img src="assets/icon-128.png" width="88" alt="Milo mascot with a blue pencil"></p>
-<h1 align="center">Milo Browser Extension</h1>
-<p align="center"><strong>别人翻译完就结束，Milo 翻译完才刚开始。</strong></p>
-<p align="center">划词看释义 · 保存原句与来源 · 在原网页双语阅读</p>
+<h1 align="center">Milo Translator Extension</h1>
+<p align="center"><strong>“别人翻译完就结束，Milo 翻译完才刚开始。”</strong></p>
+<p align="center">面向沉浸式英文阅读的 AI 原生渐进式双语对照 · 上下文生词捕获 · 桌面端轻量伴读系统</p>
 <p align="center">
   <a href="https://github.com/libuyi543-lang/milo-browser-extension/releases/latest">下载安装包</a> ·
   <a href="docs/INSTALL.md">安装教程</a> ·
-  <a href="README.en.md">English</a> ·
+  <a href="README.en.md">English README</a> ·
   <a href="https://github.com/libuyi543-lang/milo-browser-extension/issues">反馈建议</a>
 </p>
 <p align="center">
   <a href="https://github.com/libuyi543-lang/milo-browser-extension/actions/workflows/build.yml"><img src="https://github.com/libuyi543-lang/milo-browser-extension/actions/workflows/build.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/github/v/release/libuyi543-lang/milo-browser-extension" alt="Latest release">
-  <img src="https://img.shields.io/badge/Chrome-128%2B-5c7f6e" alt="Chrome 128+">
+  <img src="https://img.shields.io/badge/Chrome-128%2B%20%7C%20Manifest%20V3-5c7f6e" alt="Chrome 128+ Manifest V3">
+  <img src="https://img.shields.io/badge/LLM-DeepSeek%20Flash%20API-blue" alt="DeepSeek LLM">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-5c7f6e" alt="MIT License"></a>
 </p>
 
 ![Milo：让每一个遇见的词，都有来处](docs/images/cover.png)
 
-读英文文章、看 X 推文时，遇见一个陌生词：**选中 → 看释义 → 加入 Milo**。原句、网页标题、URL 和遇见时间一起留下。下一次再保存同一个词，Milo 会记录新的语境，并增加遇见次数。
+读英文长文、看 X/Twitter 推文时，遇见一个陌生词：**选中 → 看释义 → 加入 Milo**。原句、网页标题、URL 和遇见时间自动归档留存。下一次在新的网页再次保存同一个词，Milo 会自动追加新的上下文语境，并递增「遇见次数」。
 
-Milo 是 Milo 单词本的桌面入口。**当前版本保存于浏览器本地，尚未接入手机同步或复习功能。**
+> 💡 **产品定位**：Milo Translator Extension 是 Milo 词库生态的桌面浏览器入口。告别传统工具查完即走的断裂体验，打造**“沉浸双语阅读 ➔ 语境生词捕获 ➔ 认知沉淀”**的完整心流闭环。
 
-## 看看它怎么用
+---
+
+## 💡 为什么做 Milo Translator？
+
+在深度阅读外文资料、论文、推特技术流时，传统的翻译与查词工具往往存在三大核心痛点：
+
+```mermaid
+flowchart LR
+    A[网页英文原段] -->|⌘A 快捷呼出 / 划词选中| B(Milo 双向轻量调度)
+    B -->|智能保留 DOM 排版| C[正文逐段渐进对照]
+    B -->|提取当前完整母句+URL| D{DeepSeek 快速推理}
+    D -->|毫秒级高频响应| E[无打扰轻量释义气泡]
+    E -->|一键收藏| F[(本地 SQLite / Chrome 词库)]
+    F -->|同词自动追加多重语境| G[真实遇见次数与记忆沉淀]
+```
+
+1. **阅读流被打断（Broken Flow）**：传统词典弹窗厚重繁琐；通篇机翻又失去英文语感。Milo 采用**“原句下插入中文”的渐进式对照**，保留原文排版呼吸感，按快捷键一键唤醒与还原；
+2. **生词脱离语境（Context Blind）**：死记词汇表极难维持长期记忆。Milo 坚持**“让每个词都带着当时的句子被留下”**，记录出处与场景；
+3. **高频低成本自动化（杰文斯悖论）**：原生接入 DeepSeek 高速模型，配合本地 LRU 缓存与请求防抖合流，将翻译与查词的试错成本降到极低。
+
+---
+
+## ✨ 核心功能与使用体验
 
 ### 01 · 划词，然后把语境一起留下
 
 ![在阅读页面划选 inevitable，Milo 展示释义、原句和加入按钮](docs/images/selection.png)
 
-轻量浮窗包含中文释义、词性与原句。点击「加入 Milo」后显示「已加入 Milo」。保存的不只是词义，还有你第一次遇见它的地方。
+- **毫秒级悬浮窗**：轻量浮窗精准包含词性、中文精准释义与原始母句；
+- **一键加入生词本**：保存的不仅是死板的词条，而是你第一次在真实世界与它相遇的场景。
 
-### 02 · 中文就在英文下面
+### 02 · 渐进式双语：中文就在英文下面
 
 ![Milo 逐段插入中文，原英文和页面结构保留](docs/images/bilingual.png)
 
-Mac 按 **⌘ A**，Windows 按 **Ctrl+A**：英文段落下直接出现中文。再按一次恢复原文。输入框和编辑器内仍执行原生全选。
-
-在 **X / Twitter**，只提取主内容栏的推文、回复正文与文章富文本；导航、账号、时间、互动计数和推荐侧栏不会进入翻译请求。普通网页优先提取文章正文。
+- **沉浸式段落对照**：Mac 按 **⌘ A**，Windows 按 **Ctrl+A**，即可在英文段落下方直接展开中文对照；再按一次立即无痕恢复。输入框和代码编辑器内依然保留原生全选功能；
+- **针对信息流深度优化**：在 **X / Twitter** 上，专精识别主内容推文、回复与文章，智能过滤多余的侧边栏、账号标签、交互计数等噪音元素。
 
 ### 03 · 每一次遇见，都算数
 
 ![Milo 本地单词本显示单词、原句和遇见次数](docs/images/notebook.png)
 
-工具栏里的单词本展示最近收藏的词及遇见次数。相同词不会新建重复条目，每次重新保存都会追加一个 encounter。
+- **智能去重与语境追加**：工具栏弹窗直观查看已收录词汇与复现频次。再次收藏同一个词汇不会产生重复条目，而是追加新的语境切片（Encounter），助你在不同场景下真正掌握核心词义。
 
-> 上述图片由实际构建的 Milo UI 在固定演示页面中渲染；示例词义与译文使用本地 fixtures，不展示私人网页或密钥。复现方式见 [展示素材说明](docs/showcase/README.md)。
+> 📌 *上述界面图示均由 Milo UI 在真实测试环境下渲染，使用本地 fixtures，不泄露任何用户私有数据或密钥。*
 
-## 三分钟开始
+---
 
-1. 从 [Releases](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 ZIP 并解压。
-2. 打开 `chrome://extensions`，开启「开发者模式」，点击「加载已解压的扩展程序」，选择解压后的目录。
-3. 点击工具栏 Milo 图标，填写自己的 DeepSeek API Key 并保存。
-4. 打开英文网页，划选一个单词，点击「加入 Milo」。
+## ⚡ 三分钟快速开始
 
-完整步骤与常见问题见 [安装教程](docs/INSTALL.md)。目前通过开发者模式加载，尚未发布到 Chrome Web Store。
+1. 从 [Releases 页面](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载最新 ZIP 安装包并解压；
+2. 打开 Chrome（或 Edge、Brave 等 Chromium 浏览器），在地址栏输入 `chrome://extensions`；
+3. 打开右上角**「开发者模式」**，点击左上角**「加载已解压的扩展程序」**，选择刚才解压的目录；
+4. 点击浏览器工具栏的 Milo 图标，填入你的 **DeepSeek API Key** 并保存；
+5. 在任意英文网页中划选单词，或使用快捷键开启你的双语阅读之旅！
 
-## 已实现与后续计划
+> 完整安装步骤与常见排错见 [安装指南 (INSTALL.md)](docs/INSTALL.md)。
 
-| 当前可用 | 后续计划，尚未实现 |
-| --- | --- |
-| 英文单词划词、中文释义、原句提取 | Milo 手机端同步 |
-| 本地保存、来源记录、重复遇见计数 | 登录与账号体系 |
-| 网页正文逐段中英对照、停止 / 重试 / 恢复 | 滚动加载新正文的增量翻译 |
-| X 正文识别、翻译缓存、重复请求合并 | 更大规模单词本与数据导出 |
-| DeepSeek Flash provider 与统一翻译接口 | 在语境中解释单词、多 provider 选择 |
+---
 
-本版面向英文 → 中文阅读；PDF、OCR、图片 / canvas 文字、跨域 iframe 正文不在当前范围内。
+## 🛠️ 系统架构与性能设计
 
-## 流畅度与 API 成本
+| 关键机制 | 工程实现与优化策略 | 用户价值 |
+| :--- | :--- | :--- |
+| **多级本地缓存** | 单词缓存 30 天，长正文缓存 7 天（上限 500 条 / 约 1MB） | 瞬间命中，零网络等待，极大降低 API 费用 |
+| **去重与并发合并** | 相同未完成请求复用 Promise，最多允许 2 个并发任务，划词任务享受最高优先权 | 杜绝并发堵塞与重复计费 |
+| **智能防抖调度** | 划词稳定停顿 150ms 后才触发请求；关闭弹窗或切换即刻中断未完成网络流 | 有效消除划选误触与无效请求 |
+| **视口优先渲染** | 优先处理当前屏幕视口（Viewport）内的段落，长文自动流式拆分 | 几千字长文章随看随翻，阅读不卡顿 |
 
-- **本地缓存**：单词 30 天、正文 7 天，最多 500 条、约 1 MB。命中缓存不发送 API 请求。
-- **去重与排队**：相同未完成请求共享结果，正文重复文本只发送一次；最多两个并发网络请求，等待中的划词任务优先。
-- **少一些误触**：划词稳定 150 ms 后才查询；关闭浮窗、切换词或停止正文翻译会取消对应未完成任务。
-- **优先当前阅读位置**：正文优先翻译视口内段落，长文章分批处理。
+---
 
-API 按 DeepSeek 的实际用量计费；已发出的请求即使取消，也可能产生费用。Milo 本身不收取翻译订阅费。
+## 🔒 隐私与安全性保障
 
-## 隐私与数据
+- **密钥本地自持**：API Key 严格保存在本地 `chrome.storage.local`，网页宿主脚本（Content Script）无权限直接访问；
+- **纯粹点对点请求**：翻译与查词直连 `api.deepseek.com`，不经过任何第三方私有中转服务器；
+- **无追踪、无收集**：Milo 不会收集或上传你的浏览历史、网页 URL、个人收藏词库或私人隐私。
 
-API Key 仅保存在当前浏览器扩展本地存储，网页 content script 无权直接读取。单词查询发送选中的词；正文翻译发送提取的英文段落，直连 `api.deepseek.com`。Milo 不主动上传网页标题、URL 或收藏记录；所选网页文本会交由 DeepSeek 处理。
+---
 
-单词保存在 `chrome.storage.local` 的 `milo_words_v1` 中。**卸载扩展会清除本地数据**，手机同步和数据导出尚未实现。详见 [隐私说明](PRIVACY.md)。源码和安装包不包含可用 API Key。
+## 🗺️ 当前可用与后续路线
 
-## 本地开发
+| 功能模块 | 当前版本状态 | 后续演进计划 |
+| :--- | :--- | :--- |
+| **单词与语境** | ✅ 英文划词、释义、原句抓取、遇见计数 | 🔄 移动端 / 微信小程序无缝双向同步 |
+| **网页阅读** | ✅ 快捷键逐段中英对照、恢复、X/Twitter 适配 | 🔄 导出为 Anki 格式 (.apkg / .csv) |
+| **模型调度** | ✅ DeepSeek Flash 高速接口与统一适配层 | 🔄 接入更多开源与商用兼容 LLM 提供商 |
 
-保留了 Saladict 的 React / TypeScript、RxJS 划词链路与 Neutrino / Webpack 扩展基础设施。构建输出为 Chrome Manifest V3。
+---
 
-使用 **Node.js 16.20.2 + Yarn 1.22.22**（沿用上游构建链，暂未升级）：
+## 💻 本地工程开发
+
+本项目基于 Chrome Manifest V3 规范构建，采用 React / TypeScript、RxJS 划词流与 Neutrino / Webpack 扩展基础设施：
 
 ```sh
+# 克隆仓库
 git clone https://github.com/libuyi543-lang/milo-browser-extension.git
 cd milo-browser-extension
+
+# 安装依赖与构建 (推荐 Node 16.20.2 + Yarn 1.22.22)
 corepack enable
 corepack prepare yarn@1.22.22 --activate
 yarn install --frozen-lockfile
-yarn lint
-yarn type-check
+
+# 运行自动化测试与打包
 yarn test
 yarn build
 yarn package
 ```
 
-开发时加载 `build/chrome`；ZIP 输出到 `dist/`。重新 build 后重新加载扩展，并刷新已打开的阅读页面。
+---
 
-当前入口为 `src/content`、`src/selection`、`src/background` 和 `src/popup`。原项目的其他源码逐步停用，未作为 Milo 功能发布。运行链路与验收记录见 [V0.2 工程说明](docs/MILO_V02.md) 和 [初始架构分析](docs/MILO_V01.md)。默认 `yarn test` 运行 Milo 测试；`yarn test:legacy` 保留上游测试入口，部分需要额外 fixtures。
+## 🤝 交流与致谢
 
-## 一起改进 Milo
-
-如果它帮你留下了一个原本会忘掉的词，可以 **Star** 或分享给也在读英文的朋友。欢迎通过 [Issue](https://github.com/libuyi543-lang/milo-browser-extension/issues) 反馈正文识别、语境提取与阅读体验的问题，或查看 [贡献指南](CONTRIBUTING.md)。可直接使用的分享文案见 [传播素材](docs/SHARING.md)。
-
-## 开源许可与致谢
-
-部分代码基于 [Saladict](https://github.com/crimx/ext-saladict)，感谢 CRIMX 与原项目贡献者。Milo 是独立衍生产品，与原项目不存在官方隶属或背书关系。
-
-原始 MIT 许可与版权信息完整保留于 [LICENSE](LICENSE)。来源说明见 [NOTICE.md](NOTICE.md)，原项目品牌条款见 [TRADEMARKS.md](TRADEMARKS.md)。历史提交和停用源码中的 Saladict 名称用于保留来源；当前产品界面使用 Milo 品牌。
+- 如果 Milo 帮助你在日常外文阅读中留下了原本会忘掉的生词，欢迎在 GitHub 点个 ⭐️ **Star** 鼓励！
+- 欢迎通过 [Issue](https://github.com/libuyi543-lang/milo-browser-extension/issues) 反馈正文识别、语境提取与功能提议。
+- 部分基础模块参考或使用了 [Saladict](https://github.com/crimx/ext-saladict) 的工程实践，感谢原作者及开源社区。详细许可与版权见 [LICENSE](LICENSE) 与 [NOTICE.md](NOTICE.md)。

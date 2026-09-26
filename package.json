@@ -1,7 +1,7 @@
 {
-  "name": "milo-browser-extension",
+  "name": "milo-translator-extension",
   "version": "0.2.4",
-  "description": "Save words and their reading context from web pages into Milo",
+  "description": "Milo Translator Extension: Context-aware progressive AI bilingual reading & vocabulary building Chrome extension",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server --mode development --open --debug",
