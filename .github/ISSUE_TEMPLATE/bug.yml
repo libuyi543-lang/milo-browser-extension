@@ -1,0 +1,31 @@
+name: Bug / 问题反馈
+description: Help us reproduce a Milo issue / 反馈可复现的问题
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Milo version / 版本
+      placeholder: 0.2.4
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS / 浏览器与系统
+      placeholder: Chrome 128+, macOS / Windows
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and expected result / 操作步骤与预期结果
+      description: Include a public page URL or minimal example if possible. Do not include API keys or private page content.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result / 实际结果
+      description: Screenshots or sanitized errors are helpful. / 可附截图，请隐藏密钥和私人信息。
+    validations:
+      required: true

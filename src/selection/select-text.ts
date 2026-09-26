@@ -24,10 +24,8 @@ import {
   isInSaladictExternal,
   isFirefox
 } from '@/_helpers/saladict'
-import {
-  getTextFromSelection,
-  getSentenceFromSelection
-} from 'get-selection-more'
+import { getTextFromSelection } from 'get-selection-more'
+import { getReadingSentence } from './context'
 import { checkSupportedLangs } from '@/_helpers/lang-check'
 import { Message } from '@/typings/message'
 import { isTypeField, newSelectionWord } from './helper'
@@ -101,7 +99,7 @@ function withTouchMode(config: AppConfig) {
         return {
           word: {
             text,
-            context: getSentenceFromSelection(selection)
+            context: getReadingSentence(selection)
           },
           self,
           dbClick: clickPeriodCount >= 2,
@@ -133,7 +131,7 @@ function withTouchMode(config: AppConfig) {
       return {
         word: {
           text,
-          context: getSentenceFromSelection(selection)
+          context: getReadingSentence(selection)
         },
         self,
         dbClick: clickPeriodCount >= 2,
@@ -207,7 +205,7 @@ function withoutTouchMode(config: AppConfig) {
       return {
         word: {
           text,
-          context: getSentenceFromSelection(selection)
+          context: getReadingSentence(selection)
         },
         self: false,
         dbClick: clickPeriodCount >= 2,
@@ -291,7 +289,7 @@ export function useInPanelSelect(
           ? {
               word: {
                 text,
-                context: getSentenceFromSelection(selection)
+                context: getReadingSentence(selection)
               },
               dbClick: clickPeriodCount >= 2,
               mouseX: mouseup.clientX,

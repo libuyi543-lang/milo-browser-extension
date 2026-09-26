@@ -1,59 +1,14 @@
 {
   "extension_name": {
     "description": "Extension name",
-    "message": "沙拉查词-聚合词典划词翻译"
+    "message": "Milo Browser Extension"
   },
   "extension_short_name": {
     "description": "Extension short name",
-    "message": "Saladict"
+    "message": "Milo"
   },
   "extension_description": {
     "description": "Description of extension",
-    "message": "聚合多部词典的划词翻译扩展，支持复杂划词方式、生词本、查词历史与 PDF 划词。"
-  },
-  "command_toggle_active": {
-    "message": "鼠标划词翻译开关"
-  },
-  "command_toggle_instant": {
-    "message": "鼠标悬浮取词开关"
-  },
-  "command_open_quick_search": {
-    "message": "打开独立词典窗口"
-  },
-  "command_open_pdf": {
-    "message": "在 Saladict 中浏览此 PDF"
-  },
-  "command_search_clipboard": {
-    "message": "在独立窗口中搜索剪贴板内容"
-  },
-  "command_next_history": {
-    "message": "下一个临时查询历史"
-  },
-  "command_prev_history": {
-    "message": "上一个临时查询历史"
-  },
-  "command_next_profile": {
-    "message": "下一个情景模式"
-  },
-  "command_prev_profile": {
-    "message": "上一个情景模式"
-  },
-  "command_profile_1": {
-    "message": "第一个情景模式"
-  },
-  "command_profile_2": {
-    "message": "第二个情景模式"
-  },
-  "command_profile_3": {
-    "message": "第三个情景模式"
-  },
-  "command_profile_4": {
-    "message": "第四个情景模式"
-  },
-  "command_profile_5": {
-    "message": "第五个情景模式"
-  },
-  "command_add_notebook": {
-    "message": "加入生词本"
+    "message": "DeepSeek 划词释义与原位双语网页翻译。按 Command+A 逐段显示中文，保存生词与阅读语境。"
   }
 }

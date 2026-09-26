@@ -1,7 +1,7 @@
 import { timer } from '@/_helpers/promise-more'
 
 const OFFSCREEN_URL = 'offscreen.html'
-const OFFSCREEN_REASONS = ['AUDIO_PLAYBACK', 'CLIPBOARD', 'DOM_PARSER'] as const
+const OFFSCREEN_REASONS = ['DOM_PARSER'] as const
 
 let creatingOffscreenDocument: Promise<void> | null = null
 
@@ -43,7 +43,7 @@ async function doEnsureOffscreenDocument() {
       url: OFFSCREEN_URL,
       reasons: [...OFFSCREEN_REASONS],
       justification:
-        'Play audio, access the clipboard, and run DOM-based extension tasks.'
+        'Parse the selected word with the existing dictionary engine.'
     })
   }
 
@@ -76,7 +76,7 @@ async function waitForOffscreenReady() {
   for (let attempt = 0; attempt < 10; attempt++) {
     try {
       const ready = await sendOffscreenMessage({
-        type: 'SALADICT_OFFSCREEN_PING'
+        type: 'MILO_OFFSCREEN_PING'
       })
       if (ready) {
         return

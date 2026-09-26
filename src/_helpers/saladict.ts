@@ -18,9 +18,9 @@ export const isStandalonePage = () => isPopupPage() || isQuickSearchPage()
 export const isNoSearchHistoryPage = () =>
   isInternalPage() && !isStandalonePage()
 
-export const SALADICT_EXTERNAL = 'saladict-external'
+export const SALADICT_EXTERNAL = 'milo-external'
 
-export const SALADICT_PANEL = 'saladict-panel'
+export const SALADICT_PANEL = 'milo-panel'
 
 export const isFirefox = navigator.userAgent.includes('Firefox')
 export const isOpera = navigator.userAgent.includes('OPR')

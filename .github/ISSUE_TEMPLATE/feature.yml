@@ -1,0 +1,16 @@
+name: Feature / 功能建议
+description: Suggest an improvement to reading or vocabulary capture / 提出阅读与收藏体验建议
+body:
+  - type: textarea
+    id: situation
+    attributes:
+      label: Reading situation / 使用场景
+      description: What are you reading, and where does the current flow get in your way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement / 改进建议
+    validations:
+      required: true

@@ -1,20 +1,20 @@
 {
-  "name": "saladict",
-  "version": "7.22.8",
-  "description": "Chrome extension and Firefox WebExtension; inline translator powered by multiple online dictionaries",
+  "name": "milo-browser-extension",
+  "version": "0.2.4",
+  "description": "Save words and their reading context from web pages into Milo",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server --mode development --open --debug",
     "storybook": "start-storybook",
-    "build:mv2": "webpack --mode production",
     "build:mv3": "webpack --config webpack.mv3.config.js --mode production",
-    "build": "yarn build:mv2 && yarn build:mv3",
-    "postbuild": "node scripts/firefox-fix.js",
+    "build": "npm run build:mv3",
     "devbuild:mv3": "webpack --config webpack.mv3.config.js --mode production --debug",
     "type-check": "tsc --noEmit",
-    "test": "jest --testTimeout 20000",
+    "test": "jest --runInBand test/specs/background/milo-storage.spec.ts test/specs/models/MiloWord.spec.ts test/specs/selection/context.spec.ts test/specs/services/BingDictionaryProvider.spec.ts test/specs/background/deepseek.spec.ts test/specs/content/page-translation.spec.ts test/specs/_helpers/extension-lifecycle.spec.ts test/specs/_helpers/browser-api.spec.ts test/specs/background/deepseek-cost.spec.ts test/specs/background/translation-cache.spec.ts test/specs/background/request-control.spec.ts test/specs/content/popup-position.spec.ts",
+    "test:legacy": "jest --testTimeout 20000",
     "test:watch": "jest --watch",
-    "zip": "node scripts/zip.js '!test' '!.git' '.env' 'deps'",
+    "package": "node scripts/package-milo.js",
+    "zip": "npm run package",
     "postinstall": "node scripts/setup-env.js",
     "commit": "git-cz",
     "release": "standard-version",
@@ -35,16 +35,8 @@
   "engines": {
     "node": "<= 16.20.2"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/crimx/ext-saladict"
-  },
-  "homepage": "https://github.com/crimx/ext-saladict",
   "license": "MIT",
   "readmeFilename": "README.md",
-  "bugs": {
-    "url": "https://github.com/crimx/ext-saladict/issues"
-  },
   "config": {
     "commitizen": {
       "path": "cz-conventional-changelog"

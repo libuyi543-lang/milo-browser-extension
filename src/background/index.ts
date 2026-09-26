@@ -1,28 +1,108 @@
-import './env'
-import '@/_helpers/axios-worker-adapter'
-import './initialization'
 import { message } from '@/_helpers/browser-api'
-import { startSyncServiceInterval } from './sync-manager'
-import { init as initPdf } from './pdf-sniffer'
-import { ContextMenus } from './context-menus'
-import { BackgroundServer } from './server'
-import { initBadge } from './badge'
-import { setupRequestGAListener } from '@/_helpers/analytics'
-import { initBackgroundState } from './state'
+import { startMiloStorageServer } from './milo-storage'
+import {
+  getAISettings,
+  saveAPIKey,
+  translateWordWithAI,
+  translateParagraphsWithAI,
+  clearTranslationCache
+} from './deepseek'
 
-// init first to recevice self messaging
+// Keep the original extension message bridge, including PAGE_INFO and iframe routing.
 message.self.initServer()
+startMiloStorageServer()
+const sessions = new Map<
+  string,
+  { controller: AbortController; pending: number }
+>()
+function sessionKey(sessionId: string, sender: browser.runtime.MessageSender) {
+  if (typeof sessionId !== 'string' || !sessionId || sessionId.length > 120)
+    throw new Error('翻译会话无效')
+  return `${sender.tab ? sender.tab.id : 'extension'}:${(sender as any)
+    .frameId || 0}:${sessionId}`
+}
 
-startSyncServiceInterval()
+async function withSession<T>(
+  sessionId: string | undefined,
+  sender: browser.runtime.MessageSender,
+  task: (signal?: AbortSignal) => Promise<T>
+): Promise<T> {
+  if (!sessionId) return task()
+  const key = sessionKey(sessionId, sender)
+  const session = sessions.get(key) || {
+    controller: new AbortController(),
+    pending: 0
+  }
+  session.pending += 1
+  sessions.set(key, session)
+  try {
+    return await task(session.controller.signal)
+  } finally {
+    session.pending -= 1
+    if (!session.pending && sessions.get(key) === session) sessions.delete(key)
+  }
+}
 
-ContextMenus.init()
-BackgroundServer.init()
+// Keep browser credentials available only to extension-owned contexts.
+const nativeStorage = (self as any).chrome && (self as any).chrome.storage.local
+if (nativeStorage && nativeStorage.setAccessLevel) {
+  nativeStorage
+    .setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })
+    .catch(console.error)
+}
 
-setupRequestGAListener()
-
-initBackgroundState()
-  .then(({ appConfig }) => {
-    initPdf(appConfig)
-    initBadge()
-  })
-  .catch(console.error)
+message.addListener('MILO_AI_SETTINGS', () => getAISettings())
+message.addListener('MILO_SET_API_KEY', async (msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('只能在 Milo 设置中修改密钥')
+    return await saveAPIKey(msg.payload.apiKey)
+  } catch (error) {
+    return { ...(await getAISettings()), error: error.message }
+  }
+})
+message.addListener('MILO_TRANSLATE_WORD', async (msg, sender) => {
+  try {
+    return {
+      result: await withSession(msg.payload.sessionId, sender, signal =>
+        translateWordWithAI(msg.payload.text, signal)
+      )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_TRANSLATE_PARAGRAPHS', async (msg, sender) => {
+  try {
+    return {
+      translations: await withSession(msg.payload.sessionId, sender, signal =>
+        translateParagraphsWithAI(msg.payload.items, signal)
+      )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_CANCEL_TRANSLATION', (msg, sender) => {
+  const key = sessionKey(msg.payload.sessionId, sender)
+  const session = sessions.get(key)
+  if (session) {
+    session.controller.abort()
+    sessions.delete(key)
+  }
+  return Promise.resolve(!!session)
+})
+message.addListener('MILO_CLEAR_TRANSLATION_CACHE', async (_msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('只能在 Milo 设置中清除缓存')
+    return await clearTranslationCache()
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_TRANSLATE_ACTIVE_PAGE', async () => {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true })
+  if (!tabs[0] || tabs[0].id == null) throw new Error('未找到当前网页')
+  return message.send(tabs[0].id, { type: 'MILO_TOGGLE_PAGE_TRANSLATION' })
+})

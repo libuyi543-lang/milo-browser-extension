@@ -1,7 +1,5 @@
-import {
-  getTextFromSelection,
-  getSentenceFromSelection
-} from 'get-selection-more'
+import { getTextFromSelection } from 'get-selection-more'
+import { getReadingSentence } from './context'
 import { AppConfig } from '@/app-config'
 import { isStandalonePage, isInDictPanel } from '@/_helpers/saladict'
 import { checkSupportedLangs } from '@/_helpers/lang-check'
@@ -193,7 +191,7 @@ function getCursorWord(
     }
 
     const text = getTextFromSelection(sel)
-    const context = getSentenceFromSelection(sel)
+    const context = getReadingSentence(sel)
 
     sel.removeAllRanges()
     if (originRange) {

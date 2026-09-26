@@ -1,9 +1,10 @@
 import { Message } from '@/typings/message'
 import { message } from '@/_helpers/browser-api'
+import { runSelectionTask } from '@/_helpers/extension-lifecycle'
 
 interface PostMessageEvent extends MessageEvent {
   data: {
-    type: 'SALADICT_SELECTION'
+    type: 'MILO_SELECTION'
     payload: Message<'SELECTION'>['payload']
   }
 }
@@ -66,7 +67,7 @@ function findFrameBySource(source: MessageEventSource | null) {
 }
 
 export function postMessageHandler({ data, source }: PostMessageEvent) {
-  if (!data || data.type !== 'SALADICT_SELECTION') {
+  if (!data || data.type !== 'MILO_SELECTION') {
     return
   }
 
@@ -80,7 +81,7 @@ export function postMessageHandler({ data, source }: PostMessageEvent) {
   const { left, top } = frame.getBoundingClientRect()
   data.payload.mouseX = data.payload.mouseX + left
   data.payload.mouseY = data.payload.mouseY + top
-  sendMessage(data.payload)
+  runSelectionTask(() => sendMessage(data.payload))
 }
 
 /**
@@ -94,7 +95,7 @@ export function sendMessage(payload: Message<'SELECTION'>['payload']) {
       console.log('New selection', payload)
     }
 
-    message.self.send({
+    return message.self.send({
       type: 'SELECTION',
       payload
     })
@@ -102,11 +103,12 @@ export function sendMessage(payload: Message<'SELECTION'>['payload']) {
     // post to upper frames/window
     window.parent.postMessage(
       {
-        type: 'SALADICT_SELECTION',
+        type: 'MILO_SELECTION',
         payload
       },
       '*'
     )
+    return Promise.resolve()
   }
 }
 
@@ -136,5 +138,5 @@ export function sendEmptyMessage(isDictPanel: boolean) {
     console.log('New selection', msg.payload)
   }
 
-  return message.self.send(msg)
+  return sendMessage(msg.payload)
 }

@@ -24,7 +24,6 @@ function createMains(manifestVersion) {
       webext: {
         type: 'content_scripts',
         manifest: {
-          css: ['assets/content.css'],
           matches: ['<all_urls>']
         },
         setup: 'content/__fake__/env.ts'
@@ -61,49 +60,12 @@ function createMains(manifestVersion) {
       }
     },
 
-    options: {
-      entry: 'options',
-      webext: {
-        type: 'options_ui',
-        manifest: {
-          open_in_tab: true
-        },
-        setup: 'options/__fake__/env.ts'
-      }
-    },
-
     background: {
       entry: 'background',
       webext: {
         type: 'background',
         setup: 'background/__fake__/env.ts'
       }
-    },
-
-    notebook: {
-      entry: 'notebook'
-    },
-
-    history: {
-      entry: 'history'
-    },
-
-    'quick-search': {
-      entry: 'quick-search'
-    },
-
-    'word-editor': {
-      entry: 'word-editor'
-    },
-
-    'audio-control': {
-      entry: 'audio-control'
-    }
-  }
-
-  if (manifestVersion === 3) {
-    mains.offscreen = {
-      entry: 'offscreen'
     }
   }
 
@@ -125,7 +87,7 @@ module.exports = function createNeutrinoConfig({
     use: [
       react({
         html: {
-          title: 'Saladict'
+          title: 'Milo'
         },
         image: false,
         style: {
@@ -208,17 +170,19 @@ module.exports = function createNeutrinoConfig({
       }),
       copy({
         patterns: [
-          { context: 'assets', from: '**/*', to: 'assets/', toType: 'dir' },
+          { from: 'LICENSE', to: 'LICENSE', toType: 'file' },
+          { from: 'NOTICE.md', to: 'NOTICE.md' },
+          { from: 'TRADEMARKS.md', to: 'TRADEMARKS.md' },
+          { from: 'docs/DISTRIBUTION_README.md', to: 'README.md' },
+          { from: 'PRIVACY.md', to: 'PRIVACY.md' },
+          { from: 'docs/INSTALL.md', to: 'docs/INSTALL.md', toType: 'file' },
+          { from: 'docs/MILO_V01.md', to: 'docs/MILO_V01.md', toType: 'file' },
+          { from: 'docs/MILO_V02.md', to: 'docs/MILO_V02.md', toType: 'file' },
+          { context: 'assets', from: 'icon-*.png', to: 'assets/', toType: 'dir' },
           {
             context: 'src/_locales/manifest',
             from: '**/*',
             to: '_locales/',
-            toType: 'dir'
-          },
-          {
-            context: 'node_modules/antd/dist/',
-            from: '+(antd|antd.dark).min.css',
-            to: 'assets/',
             toType: 'dir'
           }
         ]
@@ -268,7 +232,7 @@ module.exports = function createNeutrinoConfig({
           })
 
         // avoid collision
-        neutrino.config.output.jsonpFunction('saladictEntry')
+        neutrino.config.output.jsonpFunction('miloEntry')
 
         // transform *.shadow.(css|scss) to string
         // this will be injected into shadow-dom style tag

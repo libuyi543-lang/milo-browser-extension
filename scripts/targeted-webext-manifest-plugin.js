@@ -208,9 +208,6 @@ function patchChromiumMv3Manifest(manifest) {
   })
 
   permissions.delete('webRequestBlocking')
-  permissions.add('scripting')
-  permissions.add('offscreen')
-  permissions.add('declarativeNetRequestWithHostAccess')
 
   optionalPermissions.delete('background')
 

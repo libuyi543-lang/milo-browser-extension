@@ -1,0 +1,3 @@
+Mode: built-in image_gen edit using supplied mascot image.
+
+Use this Milo mascot illustration to make a full-bleed square app icon. Keep the brown mole holding the blue pencil and its facial features and pose exactly. CRITICAL: eliminate the rounded-square boundary completely. Extend the pale blue background to ALL FOUR canvas edges and every corner. Entire image must be opaque pale blue background behind the mascot, with NO black areas, NO transparent areas, NO white fringe, NO outer border, NO rounded-square outline and NO margin. Mascot centered, clear and recognizable at small sizes. Same soft 3D illustration, no text, square output.

@@ -1,37 +1,47 @@
-name: build
+name: Milo CI
+
 on:
   push:
-    branches:
-      - dev
+    branches: [main, 'codex/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: milo-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-and-test:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 16.20.2
           cache: yarn
-          cache-dependency-path: yarn.lock
-
-      - name: Setup Yarn v1
+      - name: Use Yarn 1
         run: |
           corepack enable
           corepack prepare yarn@1.22.22 --activate
-          yarn --version
-
-      - name: Install dependencies 📦
+      - name: Install locked dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Lint 🧹
+      - name: Lint
+        run: yarn lint
+      - name: Type check
+        run: yarn type-check
+      - name: Milo tests (no API credentials needed)
+        run: yarn test
+      - name: Build Chrome MV3 and ZIP
         run: |
-          yarn lint
-          yarn type-check
-
-      - name: Build 🔧
-        run: yarn build
-
-      - name: Test 🧪
-        run: yarn test --testPathIgnorePatterns 'components/dictionaries'
+          yarn build
+          yarn package
+      - name: Upload installable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: milo-chrome-extension
+          path: dist/Milo-Browser-Extension-*.zip
+          if-no-files-found: error

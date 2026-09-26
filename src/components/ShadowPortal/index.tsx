@@ -47,8 +47,7 @@ export const ShadowPortal = (props: ShadowPortalProps) => {
     if (!$root) {
       $root = document.createElement('div')
       $root.id = id
-      $root.className = `saladict-div ${shadowRootClassName ||
-        SALADICT_EXTERNAL}`
+      $root.className = `milo-root ${shadowRootClassName || SALADICT_EXTERNAL}`
     }
     return $root
   }, [shadowRootClassName])

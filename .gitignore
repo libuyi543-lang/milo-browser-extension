@@ -87,6 +87,7 @@ jspm_packages/
 # Neutrino build directory
 build
 build-mv3
+dist/
 
 assets/pdf/
 deps/
@@ -98,3 +99,11 @@ test/**/response
 
 
 **/.DS_Store
+
+# Local credentials and private exports
+.env.*
+!.env.example
+*.pem
+*.key
+output/
+tmp/

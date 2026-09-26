@@ -1,7 +1,9 @@
 import { Word, DBArea } from '@/_helpers/record-manager'
+import { MiloWord, MiloWordInput } from '@/models/MiloWord'
 import { DictID } from '@/app-config'
 import { DictSearchResult } from '@/components/dictionaries/helpers'
 import { OpenUrlOptions } from '@/_helpers/browser-api'
+import { TranslationResult } from '@/services/translation/TranslationProvider'
 
 type MessageConfigType<
   T extends {
@@ -10,6 +12,46 @@ type MessageConfigType<
 > = T
 
 export type MessageConfig = MessageConfigType<{
+  MILO_TRANSLATE_WORD: {
+    payload: { text: string; sessionId?: string }
+    response: { result?: TranslationResult; error?: string }
+  }
+  MILO_TRANSLATE_PARAGRAPHS: {
+    payload: { items: Array<{ id: string; text: string }>; sessionId?: string }
+    response: {
+      translations?: Array<{ id: string; text: string }>
+      error?: string
+    }
+  }
+  MILO_AI_SETTINGS: {
+    response: {
+      configured: boolean
+      model: string
+      cache: { entries: number; bytes: number }
+    }
+  }
+  MILO_CLEAR_TRANSLATION_CACHE: {
+    response: { entries?: number; bytes?: number; error?: string }
+  }
+  MILO_CANCEL_TRANSLATION: {
+    payload: { sessionId: string }
+    response: boolean
+  }
+  MILO_SET_API_KEY: {
+    payload: { apiKey: string }
+    response: { configured: boolean; model: string; error?: string }
+  }
+  MILO_TRANSLATE_ACTIVE_PAGE: {}
+  MILO_TOGGLE_PAGE_TRANSLATION: { response: boolean }
+  MILO_SAVE_WORD: {
+    payload: MiloWordInput
+    response: MiloWord
+  }
+
+  MILO_LIST_WORDS: {
+    response: MiloWord[]
+  }
+
   /* ------------------------------------------------ *\
      Backend - From other pages to background script
   \* ------------------------------------------------ */

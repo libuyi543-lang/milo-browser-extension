@@ -7,6 +7,10 @@ import { map, filter } from 'rxjs/operators'
 
 import { Message, MessageResponse, MsgType } from '@/typings/message'
 import { Mutable } from '@/typings/helpers'
+import {
+  invalidateExtensionContext,
+  isContextInvalidatedError
+} from './extension-lifecycle'
 
 /* --------------------------------------- *\
  * #Types
@@ -364,6 +368,7 @@ function wrapMessageError<T extends MsgType>(
   error: unknown,
   callContext: Error
 ): Error {
+  if (isContextInvalidatedError(error)) invalidateExtensionContext()
   const runtimeError =
     error &&
     typeof error === 'object' &&
@@ -438,10 +443,18 @@ function messageSend<T extends MsgType>(
   ...args: [Message<T>] | [number, Message<T>]
 ): Promise<any> {
   const callContext = createMessageCallContext('message.send', messageSend)
-  return (args.length === 1
-    ? browser.runtime.sendMessage(args[0])
-    : browser.tabs.sendMessage(args[0], args[1])
-  )
+  let request: Promise<any>
+  try {
+    request =
+      args.length === 1
+        ? browser.runtime.sendMessage(args[0])
+        : browser.tabs.sendMessage(args[0], args[1])
+  } catch (error) {
+    return Promise.reject(
+      wrapMessageError('message.send', args, error, callContext)
+    )
+  }
+  return request
     .then(response =>
       validateMessageResponse('message.send', args, response, callContext)
     )
@@ -498,7 +511,10 @@ function messageAddListener<T extends MsgType>(
   ...args: [T, onMessageEvent<Message<T>>] | [onMessageEvent<Message>]
 ): void {
   if (this.__self__ && window.pageId === undefined) {
-    initClient().catch(console.error)
+    initClient().catch(error => {
+      if (isContextInvalidatedError(error)) invalidateExtensionContext()
+      else console.error(error)
+    })
   }
   const allListeners = this.__self__ ? messageSelfListeners : messageListeners
   const messageType = args.length === 1 ? undefined : args[0]
@@ -525,7 +541,12 @@ function messageAddListener<T extends MsgType>(
     listeners.set(messageType || '__DEFAULT_MSGTYPE__', listener)
   }
   // object is handled
-  return browser.runtime.onMessage.addListener(listener as any)
+  try {
+    return browser.runtime.onMessage.addListener(listener as any)
+  } catch (error) {
+    if (isContextInvalidatedError(error)) invalidateExtensionContext()
+    else throw error
+  }
 }
 
 function messageRemoveListener(
@@ -546,7 +567,7 @@ function messageRemoveListener(
       const listener = listeners.get(messageType)
       if (listener) {
         // @ts-ignore
-        browser.runtime.onMessage.removeListener(listener)
+        safelyRemoveMessageListener(listener)
         listeners.delete(messageType)
         if (listeners.size <= 0) {
           allListeners.delete(cb)
@@ -557,14 +578,23 @@ function messageRemoveListener(
       // delete all cb related callbacks
       listeners.forEach(listener =>
         // @ts-ignore
-        browser.runtime.onMessage.removeListener(listener)
+        safelyRemoveMessageListener(listener)
       )
       allListeners.delete(cb)
       return
     }
   }
   // @ts-ignore
-  browser.runtime.onMessage.removeListener(cb)
+  safelyRemoveMessageListener(cb)
+}
+
+function safelyRemoveMessageListener(listener: onMessageEvent): void {
+  try {
+    browser.runtime.onMessage.removeListener(listener as any)
+  } catch (error) {
+    if (isContextInvalidatedError(error)) invalidateExtensionContext()
+    else throw error
+  }
 }
 
 function messageCreateStream<T extends MsgType>(
@@ -667,7 +697,7 @@ function _getPageInfo(sender: browser.runtime.MessageSender) {
     // FRAGILE: Assume only browser action page is tabless
     result.pageId = 'popup'
     if (sender.url && !sender.url.startsWith('http')) {
-      result.faviconURL = 'https://saladict.crimx.com/favicon.ico'
+      result.faviconURL = browser.runtime.getURL('assets/icon-16.png')
     }
   }
   return result
