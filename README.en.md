@@ -78,6 +78,16 @@ flowchart LR
 
 ---
 
+## Chinese drafts → English with three spaces
+
+Type Chinese in a search box or textarea, then tap **Space three times quickly** (no more than 1.2 seconds between taps). Milo translates the entire focused field to English and replaces its contents using your active AI provider. No selection or additional click is required.
+
+The gesture spaces are removed before translation. Continued editing cancels the request and protects the newer draft. Pure English, password/read-only fields and IME candidate selection are excluded. Limit: 2000 characters; advanced rich editors and iframe inputs are outside this version.
+
+![Actual shortcut UI using a local fixture and mocked AI response](docs/images/input-translation.png)
+
+See [input translation details](docs/INPUT_TRANSLATION.md). Only the focused draft is sent to your provider, not other form fields.
+
 ## AI providers and toolbar access
 
 Milo supports DeepSeek, Zhipu GLM, Xiaomi MiMo and MiniMax with independent saved credentials and model names. Click **Manage API**, select a service and save its key. Saving an empty key input keeps the previous key; use the remove button to clear it. **Save and test** makes a small billed hello request and bypasses caches.

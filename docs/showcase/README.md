@@ -17,3 +17,7 @@ The mascot icon was prepared earlier with the built-in image editing tool from t
 `node scripts/test-extension-popup.js` launches the real build with its MV3 worker in a clean, temporary Chromium profile. Set `MILO_CHROMIUM_PATH` if using an externally installed Playwright Chromium, and `MILO_PLAYWRIGHT_MODULE` as above. It does not read your normal browser profile or send API requests.
 
 Set `MILO_LEGACY_ZIP` to an old Milo ZIP to additionally load a mixed installation (old background / new popup) and verify an actionable reload message rather than a blank root. Temporary profiles and extracted fixtures are removed after the test.
+
+## Three-space input integration
+
+`node scripts/test-input-translation.js` uses the same isolated Chromium setup to load the real extension and a local fixture page. API responses are mocked inside that test worker, so no provider calls are billed. It checks three-tap detection, caret positions, whole-field replacement, native undo, controlled React state, contenteditable, editing cancellation, password exclusion, select-all and the existing word popup. Set `MILO_CAPTURE_INPUT=1` to capture the UI figure.

@@ -3,7 +3,7 @@
 ## 下载并加载
 
 1. 使用 Chrome 128 或更新版本。
-2. 从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.3.1.zip`。
+2. 从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.4.0.zip`。
 3. 解压到一个固定目录。加载后不要移动或删除该目录。
 4. 在地址栏输入 `chrome://extensions`，打开右上角「开发者模式」。
 5. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的目录。
@@ -26,6 +26,12 @@
 在网页正文按 `⌘ A`（Mac）或 `Ctrl+A`（Windows），中文逐段插入英文下方。再按一次恢复。也可使用工具栏的「翻译 / 恢复网页正文」。输入框和编辑器中仍是正常全选。
 
 右下角状态提示可停止、重试或恢复。X 只翻译主内容栏正文，不翻译导航和侧栏。新滚动加载的内容可先恢复，再重新触发翻译。
+
+## 输入框中译英
+
+输入中文后快速连续敲三下空格，Milo 自动翻译整个输入框并替换成英文。不需要选词或点按钮，每次敲击间隔不超过 1.2 秒。输入法正在选字、长按空格、纯英文、密码与只读字段会跳过。
+
+翻译等待期间继续编辑会取消任务，保留新输入。使用当前设置的 AI 服务，费用由自己的账户承担；最多 2000 字符。
 
 ## 更新
 

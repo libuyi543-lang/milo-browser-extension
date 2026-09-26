@@ -2,6 +2,14 @@
 
 历史 Saladict 发布记录已移至 [docs/UPSTREAM_CHANGELOG.md](docs/UPSTREAM_CHANGELOG.md)，不代表 Milo 版本。
 
+## 0.4.0
+
+- 输入框快速连续敲三下空格，将当前完整中文 / 中英混排内容翻译成英文并原位替换。
+- 清理快捷键空格，兼容输入 / 搜索框、textarea、基础 contenteditable 和 React 受控输入。
+- 使用当前 AI 服务，缓存中译英结果，关闭、编辑、IME 与切换服务时取消旧任务。
+- 跳过纯英文、密码、只读、复杂富文本编辑器与按住重复空格。
+- 140 项测试通过；真实 Chromium 本地演示验证原位替换、撤销、受控状态、继续编辑保护与旧功能。
+
 ## 0.3.1
 
 - 修复新版 popup 读取旧后台设置时 `profiles` 缺失导致 React 根节点变空的问题。

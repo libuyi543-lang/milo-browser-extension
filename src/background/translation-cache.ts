@@ -1,4 +1,4 @@
-export type CacheKind = 'word' | 'paragraph'
+export type CacheKind = 'word' | 'paragraph' | 'input'
 interface CacheEntry {
   key: string
   kind: CacheKind
@@ -77,7 +77,9 @@ export class TranslationCache {
             (entry: CacheEntry) =>
               entry &&
               typeof entry.key === 'string' &&
-              (entry.kind === 'word' || entry.kind === 'paragraph') &&
+              (entry.kind === 'word' ||
+                entry.kind === 'paragraph' ||
+                entry.kind === 'input') &&
               Number.isFinite(entry.createdAt) &&
               Number.isFinite(entry.usedAt) &&
               !this.expired(entry)

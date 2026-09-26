@@ -7,6 +7,7 @@ import {
   testAIConnection,
   translateWordWithAI,
   translateParagraphsWithAI,
+  translateInputWithAI,
   clearTranslationCache
 } from './ai-translation'
 
@@ -97,6 +98,17 @@ message.addListener('MILO_TRANSLATE_PARAGRAPHS', async (msg, sender) => {
     return {
       translations: await withSession(msg.payload.sessionId, sender, signal =>
         translateParagraphsWithAI(msg.payload.items, signal)
+      )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_TRANSLATE_INPUT', async (msg, sender) => {
+  try {
+    return {
+      text: await withSession(msg.payload.sessionId, sender, signal =>
+        translateInputWithAI(msg.payload.text, signal)
       )
     }
   } catch (error) {

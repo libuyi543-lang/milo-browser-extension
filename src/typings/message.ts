@@ -17,6 +17,10 @@ export type MessageConfig = MessageConfigType<{
     payload: { text: string; sessionId?: string }
     response: { result?: TranslationResult; error?: string }
   }
+  MILO_TRANSLATE_INPUT: {
+    payload: { text: string; sessionId: string }
+    response: { text?: string; error?: string }
+  }
   MILO_TRANSLATE_PARAGRAPHS: {
     payload: { items: Array<{ id: string; text: string }>; sessionId?: string }
     response: {

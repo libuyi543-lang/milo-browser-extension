@@ -77,6 +77,8 @@ const App = () => {
           ⌘ A 翻译正文，再按一次恢复原文。
           <br />
           Windows 使用 Ctrl+A；输入框内仍可全选。
+          <br />
+          输入框内连续敲三下空格：中文转英文。
         </p>
         {aiTip && (
           <p className="milo-ai-tip" role="status">
