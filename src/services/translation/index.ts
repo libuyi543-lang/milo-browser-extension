@@ -1,7 +1,7 @@
-import { DeepSeekProvider } from './DeepSeekProvider'
+import { AITranslationProvider } from './AITranslationProvider'
 import { TranslationProvider } from './TranslationProvider'
 
-const provider: TranslationProvider = DeepSeekProvider
+const provider: TranslationProvider = AITranslationProvider
 
 export const translateWord = (text: string, sessionId?: string) =>
   provider.translate(text, sessionId)

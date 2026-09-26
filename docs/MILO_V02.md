@@ -1,3 +1,5 @@
+> 本文记录 V0.2 阶段实现，V0.3 的多 AI 服务与新存储键见 [AI_PROVIDERS.md](AI_PROVIDERS.md)。
+
 # Milo V0.2 工程与验收
 
 新增 DeepSeek 单词查询和自然网页双语翻译。原选择检测、跨 iframe 划词传递、ShadowPortal 与消息封装继续保留。翻译请求由 background 直连 DeepSeek，不再加载 Bing/offscreen 运行入口，Chrome 权限为 storage、tabs 和网页访问。

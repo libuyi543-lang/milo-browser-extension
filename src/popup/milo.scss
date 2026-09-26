@@ -1,9 +1,10 @@
 html, body, #root { margin: 0; min-height: 100%; }
-body { width: 320px; background: #fbfaf6; color: #27352d; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+body { width: 360px; background: #fbfaf6; color: #27352d; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 * { box-sizing: border-box; }
 .milo-popup { padding: 24px 22px 20px; }
 .milo-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.milo-logo { margin: 0; color: #416a54; font: 700 25px Georgia, 'Times New Roman', serif; letter-spacing: -.03em; }
+.milo-logo { display:flex; align-items:center; gap:9px; margin: 0; color: #416a54; font: 700 25px Georgia, 'Times New Roman', serif; letter-spacing: -.03em; }
+.milo-logo img { border-radius:7px; }
 .milo-count { color: #779080; font-size: 12px; }
 .milo-lead { margin: 12px 0 21px; color: #65746a; font-size: 13px; line-height: 1.6; }
 .milo-list { display: grid; gap: 0; border-top: 1px solid #e5e8df; }
@@ -24,3 +25,22 @@ body { width: 320px; background: #fbfaf6; color: #27352d; font-family: -apple-sy
 .milo-action:disabled { opacity:.45; cursor:default; }
 .milo-key-note { margin:9px 0 0; font-size:11px; line-height:1.65; color:#829087; }
 .milo-ai-tip { color:#5c7f6e; font-size:12px; }
+.milo-ai-error { color:#a15c4e; }
+.milo-pin-help { margin-top:10px; padding-left:0; font-size:11px; }
+.milo-provider-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:12px 0 15px; }
+.milo-provider { padding:10px 12px; border:1px solid #dce3d8; border-radius:9px; background:#f7f7f0; color:#4a6050; font-family:inherit; font-size:13px; font-weight:500; line-height:1.5; text-align:left; cursor:pointer; }
+.milo-provider span { display:block; font:11px/1.6 -apple-system,sans-serif; color:#8b9889; margin-top:2px; }
+.milo-provider[aria-pressed=true] { border-color:#6e8d77; background:#e9efe3; }
+.milo-provider[aria-pressed=true] span { color:#58725e; }
+.milo-provider:disabled { cursor:default; opacity:.7; }
+.milo-setting-actions { display:flex; gap:8px; align-items:stretch; margin-top:12px; }
+.milo-setting-actions .milo-action { margin:0; flex:1; width:auto; }
+.milo-secondary { flex:1; border:1px solid #cad6c8; border-radius:8px; background:transparent; color:#5c7f6e; padding:10px; font-size:13px; cursor:pointer; }
+.milo-secondary:disabled { opacity:.45; cursor:default; }
+.milo-key-note a { color:#5c7f6e; margin-left:4px; }
+.milo-remove-key { padding-left:0; margin-top:6px; font-size:11px; color:#9b7060; }
+.milo-cache-settings { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; }
+.milo-cache-settings .milo-key-note { margin:0; }
+.milo-cache-settings .milo-link { font-size:11px; }
+.milo-reading-actions { padding-bottom:18px; }
+.milo-key:focus-visible,button:focus-visible { outline:2px solid #739080; outline-offset:2px; }

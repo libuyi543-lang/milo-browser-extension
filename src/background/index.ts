@@ -3,10 +3,12 @@ import { startMiloStorageServer } from './milo-storage'
 import {
   getAISettings,
   saveAPIKey,
+  saveAISettings,
+  testAIConnection,
   translateWordWithAI,
   translateParagraphsWithAI,
   clearTranslationCache
-} from './deepseek'
+} from './ai-translation'
 
 // Keep the original extension message bridge, including PAGE_INFO and iframe routing.
 message.self.initServer()
@@ -52,6 +54,24 @@ if (nativeStorage && nativeStorage.setAccessLevel) {
 }
 
 message.addListener('MILO_AI_SETTINGS', () => getAISettings())
+message.addListener('MILO_SAVE_AI_SETTINGS', async (msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('只能在 Milo 设置中修改 AI 服务')
+    return await saveAISettings(msg.payload)
+  } catch (error) {
+    return { ...(await getAISettings()), error: error.message }
+  }
+})
+message.addListener('MILO_TEST_AI_CONNECTION', async (_msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('只能在 Milo 设置中测试连接')
+    return await testAIConnection()
+  } catch (error) {
+    return { error: error.message }
+  }
+})
 message.addListener('MILO_SET_API_KEY', async (msg, sender) => {
   try {
     if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))

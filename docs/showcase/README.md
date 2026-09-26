@@ -6,7 +6,7 @@ The renderer loads the real `build/chrome` content and toolbar bundles. Browser 
 2. Provide Playwright in a separate Node 18+ environment (do not modify the extension lockfile). Chrome must be installed, or Playwright Chromium must be downloaded.
 3. Run `node scripts/render-showcase.js`. If Playwright is installed outside this project, set `MILO_PLAYWRIGHT_MODULE` to its module directory. Set `MILO_CHROME_PATH` to a Chrome executable if the platform default does not work.
 
-Generated files are placed in `docs/images`. The demo server binds only to `127.0.0.1` on a temporary port and closes after capture. The script checks the popup meaning, saved state, inline translation and encounter count before taking images.
+Generated files are placed in `docs/images`. The demo server binds only to `127.0.0.1` on a temporary port and closes after capture. The script checks the popup meaning, saved state, inline translation, encounter count, provider switching and API settings save/test states before taking images.
 
 `demo.html` is the reading fixture; `fixture.js` replaces background responses using sample words. `cover.html` composes the existing icon and UI captures into a shareable cover. These UI graphics are rendered from HTML/CSS and the extension's real bundles, not AI-generated screenshots.
 

@@ -12,13 +12,15 @@
   <a href="https://github.com/libuyi543-lang/milo-browser-extension/actions/workflows/build.yml"><img src="https://github.com/libuyi543-lang/milo-browser-extension/actions/workflows/build.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/github/v/release/libuyi543-lang/milo-browser-extension" alt="Latest release">
   <img src="https://img.shields.io/badge/Chrome-128%2B%20%7C%20Manifest%20V3-5c7f6e" alt="Chrome 128+ Manifest V3">
-  <img src="https://img.shields.io/badge/LLM-DeepSeek%20Flash%20API-blue" alt="DeepSeek LLM">
+  <img src="https://img.shields.io/badge/LLM-DeepSeek%20%7C%20GLM%20%7C%20MiMo%20%7C%20MiniMax-5c7f6e" alt="Four AI providers">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-5c7f6e" alt="MIT License"></a>
 </p>
 
 ![Milo reading and vocabulary workflow](docs/images/cover.png)
 
 When reading English articles or scrolling X/Twitter feeds: **Select a word → View definitions → Add to Milo**. The source sentence, page title, URL, and timestamp are captured automatically. When you encounter and save the same word on a different page, Milo appends the new context and increments its "Encounter Count".
+
+**Vocabulary is local-only. Mobile sync, review and export are not implemented. Uninstalling deletes local data.**
 
 > 💡 **Product Vision**: Milo Translator Extension is the desktop companion for the Milo vocabulary ecosystem. It bridges the gap between passive reading and long-term retention: **"Immersive Reading ➔ Context Capture ➔ Knowledge Consolidation"**.
 
@@ -30,15 +32,15 @@ When reading English articles or scrolling X/Twitter feeds: **Select a word → 
 flowchart LR
     A[English Paragraphs] -->|⌘A Shortcut / Text Selection| B(Milo Lightweight Engine)
     B -->|Preserve DOM Layout| C[Progressive Inline Bilingual Display]
-    B -->|Extract Sentence & URL Context| D{DeepSeek Rapid Inference}
-    D -->|Sub-second Latency| E[Minimal Non-Intrusive Tooltip]
-    E -->|One-Click Save| F[(Local Chrome / SQLite Store)]
+    B -->|Selected Word / Source Paragraphs| D{Selected AI Provider}
+    D -->|Return Meaning| E[Minimal Non-Intrusive Tooltip]
+    E -->|One-Click Save| F[(Chrome Local Store)]
     F -->|Auto Append Encounters| G[Multi-Context Memory Retention]
 ```
 
 1. **Unbroken Reading Flow**: Conventional translation modals are clunky, while full-page auto-translation destroys linguistic immersion. Milo injects clean, progressive translations right beneath original paragraphs with a single keystroke.
 2. **Context-Anchored Learning**: Memorizing isolated wordlists fails. Milo ensures every word is remembered alongside the real sentence and situation where you first met it.
-3. **High-Frequency, Low-Cost Automation**: Backed by high-speed DeepSeek LLM endpoints, intelligent LRU caching, and request de-duplication to minimize API costs and latency.
+3. **High-Frequency, Low-Cost Automation**: Backed by four official AI providers, intelligent LRU caching, and request de-duplication to minimize API costs and latency.
 
 ---
 
@@ -72,7 +74,17 @@ flowchart LR
 2. Navigate to `chrome://extensions` in any Chromium browser;
 3. Toggle on **Developer mode** (top right) and click **Load unpacked** (top left);
 4. Select the unzipped folder;
-5. Click the Milo icon in your toolbar, input your **DeepSeek API Key**, and start reading!
+5. Click the Milo icon in your toolbar, choose a provider in **Manage API**, save its key and model, and start reading!
+
+---
+
+## AI providers and toolbar access
+
+Milo supports DeepSeek, Zhipu GLM, Xiaomi MiMo and MiniMax with independent saved credentials and model names. Click **Manage API**, select a service and save its key. Saving an empty key input keeps the previous key; use the remove button to clear it. **Save and test** makes a small billed hello request and bypasses caches.
+
+To keep Milo visible, open Chrome's puzzle menu and pin Milo. Extensions cannot force their own toolbar pin. MiniMax currently uses the China endpoint and China-platform keys; dedicated Coding/subscription endpoints and custom base URLs are not supported. See [provider details and official sources](docs/AI_PROVIDERS.md).
+
+![Actual multi-provider settings UI with local demo data](docs/images/ai-settings.png)
 
 ---
 
@@ -80,7 +92,7 @@ flowchart LR
 
 | Mechanism | Implementation Details | User Benefit |
 | :--- | :--- | :--- |
-| **Multi-Tier Caching** | Words cached for 30 days, paragraphs for 7 days (max 500 entries / ~1MB) | Instant hits, zero network lag, reduced API costs |
+| **Multi-Tier Caching** | Words cached for 30 days, paragraphs for 7 days (max 500 entries / ~1MB per provider) | Instant hits, zero network lag, reduced API costs |
 | **Request De-duplication** | In-flight duplicate requests share promises; max 2 concurrent network jobs | Prevents API bottlenecks and redundant billing |
 | **Intelligent Debounce** | Queries trigger only after 150ms selection stability; closing cancels network stream | Eliminates accidental selections and wasted tokens |
 | **Viewport-First Render** | Prioritizes paragraphs within visible viewport; chunked processing for long reads | Silky-smooth reading on long technical papers |
@@ -90,7 +102,8 @@ flowchart LR
 ## 🔒 Privacy & Security
 
 - **Local-Only Storage**: Your API Key is stored securely in `chrome.storage.local`. Injected webpage content scripts cannot access it.
-- **Direct Endpoints**: Requests connect directly to `api.deepseek.com` without intermediate private servers.
+- **Direct Endpoints**: Requests connect directly to the selected official provider without intermediate private servers.
+- **Translation Content**: Selected words or extracted paragraphs are sent to the selected AI provider; API calls are billed to your account.
 - **Zero Tracking**: No browsing history, URLs, or private notebooks are tracked or collected.
 
 ---

@@ -4,6 +4,7 @@ import { DictID } from '@/app-config'
 import { DictSearchResult } from '@/components/dictionaries/helpers'
 import { OpenUrlOptions } from '@/_helpers/browser-api'
 import { TranslationResult } from '@/services/translation/TranslationProvider'
+import { AISettings, AISettingsInput } from '@/models/AIProvider'
 
 type MessageConfigType<
   T extends {
@@ -24,11 +25,14 @@ export type MessageConfig = MessageConfigType<{
     }
   }
   MILO_AI_SETTINGS: {
-    response: {
-      configured: boolean
-      model: string
-      cache: { entries: number; bytes: number }
-    }
+    response: AISettings
+  }
+  MILO_SAVE_AI_SETTINGS: {
+    payload: AISettingsInput
+    response: AISettings & { error?: string }
+  }
+  MILO_TEST_AI_CONNECTION: {
+    response: { ok?: boolean; error?: string }
   }
   MILO_CLEAR_TRANSLATION_CACHE: {
     response: { entries?: number; bytes?: number; error?: string }
@@ -39,7 +43,7 @@ export type MessageConfig = MessageConfigType<{
   }
   MILO_SET_API_KEY: {
     payload: { apiKey: string }
-    response: { configured: boolean; model: string; error?: string }
+    response: AISettings & { error?: string }
   }
   MILO_TRANSLATE_ACTIVE_PAGE: {}
   MILO_TOGGLE_PAGE_TRANSLATION: { response: boolean }

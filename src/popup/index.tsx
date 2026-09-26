@@ -2,12 +2,8 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { MiloWord } from '@/models/MiloWord'
 import { listMiloWords } from '@/services/miloStorage'
-import {
-  getAISettings,
-  saveAPIKey,
-  translateCurrentPage,
-  clearTranslationCache
-} from '@/services/aiSettings'
+import { translateCurrentPage } from '@/services/aiSettings'
+import { AISettingsPanel } from './AISettingsPanel'
 import './milo.scss'
 
 document.title = 'Milo'
@@ -17,25 +13,11 @@ const App = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [configured, setConfigured] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [apiKey, setAPIKey] = useState('')
-  const [savingKey, setSavingKey] = useState(false)
   const [aiTip, setAITip] = useState('')
-  const [cacheEntries, setCacheEntries] = useState(0)
+  const [showPin, setShowPin] = useState(false)
 
   useEffect(() => {
     let active = true
-    getAISettings()
-      .then(settings => {
-        if (active) {
-          setConfigured(settings.configured)
-          setShowSettings(!settings.configured)
-          setCacheEntries(settings.cache.entries)
-        }
-      })
-      .catch(() => {
-        if (active) setAITip('设置读取失败，请重新打开扩展')
-      })
     listMiloWords()
       .then(result => {
         if (active) setWords(result)
@@ -54,68 +36,28 @@ const App = () => {
   return (
     <main className="milo-popup">
       <header className="milo-header">
-        <h1 className="milo-logo">Milo</h1>
+        <h1 className="milo-logo">
+          <img src="assets/icon-48.png" width="28" height="28" alt="" />
+          Milo
+        </h1>
         <span className="milo-count">{words.length} 个词</span>
       </header>
+      <button
+        className="milo-pin-help milo-link"
+        aria-expanded={showPin}
+        onClick={() => setShowPin(!showPin)}
+      >
+        固定到浏览器工具栏
+      </button>
+      {showPin && (
+        <p className="milo-key-note">
+          点击 Chrome 右上角的拼图图标，找到 Milo，点击右侧图钉。之后可直接点
+          Milo 图标管理 API。
+        </p>
+      )}
       <p className="milo-lead">阅读时遇见的词，都有来处。</p>
-      <div className="milo-ai">
-        <div className="milo-ai-heading">
-          <span>DeepSeek V4 Flash</span>
-          <button
-            className="milo-link"
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            设置
-          </button>
-        </div>
-        {showSettings && (
-          <form
-            onSubmit={event => {
-              event.preventDefault()
-              saveKey()
-            }}
-          >
-            <label className="milo-key-label" htmlFor="milo-api-key">
-              {configured ? '已配置密钥，可在此替换' : 'DeepSeek API Key'}
-            </label>
-            <input
-              id="milo-api-key"
-              className="milo-key"
-              type="password"
-              value={apiKey}
-              autoComplete="off"
-              placeholder={configured ? '输入新密钥' : 'sk-…'}
-              onChange={event => setAPIKey(event.target.value)}
-            />
-            <button
-              className="milo-action"
-              disabled={!apiKey.trim() || savingKey}
-            >
-              {savingKey ? '正在保存…' : '保存密钥'}
-            </button>
-            <p className="milo-key-note">
-              仅保存在当前浏览器，翻译时直连 DeepSeek。
-            </p>
-            <p className="milo-key-note">
-              已缓存 {cacheEntries} 条译文，重复内容优先复用本地结果。
-            </p>
-            <button
-              type="button"
-              className="milo-link"
-              onClick={async () => {
-                try {
-                  await clearTranslationCache()
-                  setCacheEntries(0)
-                  setAITip('翻译缓存已清除，单词本仍保留')
-                } catch (error) {
-                  setAITip(error.message || '缓存清除失败')
-                }
-              }}
-            >
-              清除翻译缓存
-            </button>
-          </form>
-        )}
+      <AISettingsPanel onConfigured={setConfigured} />
+      <div className="milo-reading-actions">
         <button
           className="milo-action"
           disabled={!configured}
@@ -170,22 +112,6 @@ const App = () => {
       <footer className="milo-foot">Milo Browser Extension · 本地保存</footer>
     </main>
   )
-
-  async function saveKey() {
-    setSavingKey(true)
-    setAITip('')
-    try {
-      const settings = await saveAPIKey(apiKey)
-      setConfigured(settings.configured)
-      setAPIKey('')
-      setShowSettings(false)
-      setAITip('密钥已保存')
-    } catch (error) {
-      setAITip(error.message || '密钥保存失败，请重试')
-    } finally {
-      setSavingKey(false)
-    }
-  }
 }
 
 ReactDOM.render(<App />, document.getElementById('root'))

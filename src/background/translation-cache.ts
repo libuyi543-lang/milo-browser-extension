@@ -37,7 +37,8 @@ export class TranslationCache {
     private maxEntries = 500,
     private maxBytes = 1024 * 1024,
     private now: () => number = Date.now,
-    private hash = fingerprint
+    private hash = fingerprint,
+    private storageKey = STORAGE_KEY
   ) {
     this.maxEntries = Math.max(1, maxEntries)
     this.maxBytes = Math.max(256, maxBytes)
@@ -67,8 +68,8 @@ export class TranslationCache {
 
   private load(): Promise<void> {
     if (!this.loading)
-      this.loading = browser.storage.local.get(STORAGE_KEY).then(stored => {
-        const data = stored[STORAGE_KEY]
+      this.loading = browser.storage.local.get(this.storageKey).then(stored => {
+        const data = stored[this.storageKey]
         if (!data || data.scope !== this.scope || !Array.isArray(data.entries))
           return
         const entries = data.entries
@@ -102,7 +103,7 @@ export class TranslationCache {
       .catch(() => undefined)
       .then(() =>
         browser.storage.local.set({
-          [STORAGE_KEY]: {
+          [this.storageKey]: {
             scope: this.scope,
             entries: Array.from(this.entries.values())
           }

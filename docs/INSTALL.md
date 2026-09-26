@@ -3,17 +3,19 @@
 ## 下载并加载
 
 1. 使用 Chrome 128 或更新版本。
-2. 从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.2.4.zip`。
+2. 从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.3.0.zip`。
 3. 解压到一个固定目录。加载后不要移动或删除该目录。
 4. 在地址栏输入 `chrome://extensions`，打开右上角「开发者模式」。
 5. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的目录。
-6. 在工具栏扩展列表中找到 Milo，按需固定它。
+6. 点击 Chrome 右上角拼图，在 Milo 右侧点击图钉固定到工具栏。
 
 没有 Chrome Web Store 安装入口；ZIP 本身不能直接拖入作为已签名扩展安装。
 
 ## 配置翻译
 
-点击工具栏 Milo 图标，填写自己的 DeepSeek API Key，点击「保存密钥」。项目不附赠密钥；调用费用由自己的 DeepSeek 账户承担。密钥仅保存在当前浏览器，不要将其放进 GitHub Issue 或截图。
+点击工具栏 Milo 图标 →「管理 API」，选择 DeepSeek、智谱 GLM、小米 MiMo 或 MiniMax，填写该服务的 API Key 并选择模型，点击「保存并使用」。项目不附赠密钥；调用费用由自己的服务账户承担。密钥仅保存在当前浏览器，不要将其放进 GitHub Issue 或截图。
+
+「保存并测试」会用当前配置发送一次 hello 查询，产生少量 API 用量。各家密钥独立保存；已保存的密钥不回显，输入框留空会保留它。模型需在账户中可用。原有 DeepSeek 配置会自动保留。详见 [AI 服务配置](https://github.com/libuyi543-lang/milo-browser-extension/blob/main/docs/AI_PROVIDERS.md)。
 
 ## 收藏一个词
 

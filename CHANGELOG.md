@@ -2,6 +2,14 @@
 
 历史 Saladict 发布记录已移至 [docs/UPSTREAM_CHANGELOG.md](docs/UPSTREAM_CHANGELOG.md)，不代表 Milo 版本。
 
+## 0.3.0
+
+- 新增 DeepSeek / 智谱 GLM / 小米 MiMo / MiniMax 服务选择与独立模型、密钥配置。
+- 兼容不同认证头、token 参数、思考输出与 JSON 格式。
+- 保留旧版 DeepSeek 配置；更换服务 / 模型取消旧请求，缓存按服务独立并隔离模型。
+- 保存并测试连接、移除单家密钥、获取密钥链接与工具栏固定说明。
+- 104 项测试与实际 UI 演示验证通过；真实第三方服务可用性需用户使用自己的密钥测试。
+
 ## 0.2.4
 
 - 使用 Milo 鼹鼠与蓝色铅笔图标，导出各浏览器图标尺寸。
