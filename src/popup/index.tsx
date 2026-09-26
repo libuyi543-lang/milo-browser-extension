@@ -4,6 +4,7 @@ import { MiloWord } from '@/models/MiloWord'
 import { listMiloWords } from '@/services/miloStorage'
 import { translateCurrentPage } from '@/services/aiSettings'
 import { AISettingsPanel } from './AISettingsPanel'
+import { PopupErrorBoundary } from './ErrorBoundary'
 import './milo.scss'
 
 document.title = 'Milo'
@@ -114,4 +115,9 @@ const App = () => {
   )
 }
 
-ReactDOM.render(<App />, document.getElementById('root'))
+ReactDOM.render(
+  <PopupErrorBoundary>
+    <App />
+  </PopupErrorBoundary>,
+  document.getElementById('root')
+)

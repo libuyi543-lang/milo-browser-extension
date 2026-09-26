@@ -2,6 +2,13 @@
 
 历史 Saladict 发布记录已移至 [docs/UPSTREAM_CHANGELOG.md](docs/UPSTREAM_CHANGELOG.md)，不代表 Milo 版本。
 
+## 0.3.1
+
+- 修复新版 popup 读取旧后台设置时 `profiles` 缺失导致 React 根节点变空的问题。
+- 设置响应进入 UI 前校验，失配时提示重新加载并提供扩展管理 / 重读入口。
+- 增加 popup 错误边界，异常时保留可操作的恢复界面。
+- 115 项单元测试通过，真实 Chromium 加载验证新后台与旧后台 / 新 popup 两种场景。
+
 ## 0.3.0
 
 - 新增 DeepSeek / 智谱 GLM / 小米 MiMo / MiniMax 服务选择与独立模型、密钥配置。

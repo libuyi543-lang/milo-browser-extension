@@ -11,3 +11,9 @@ Generated files are placed in `docs/images`. The demo server binds only to `127.
 `demo.html` is the reading fixture; `fixture.js` replaces background responses using sample words. `cover.html` composes the existing icon and UI captures into a shareable cover. These UI graphics are rendered from HTML/CSS and the extension's real bundles, not AI-generated screenshots.
 
 The mascot icon was prepared earlier with the built-in image editing tool from the user-provided artwork. The retained icon edit prompt is in `icon-edit-prompt.txt`.
+
+## Actual extension popup regression
+
+`node scripts/test-extension-popup.js` launches the real build with its MV3 worker in a clean, temporary Chromium profile. Set `MILO_CHROMIUM_PATH` if using an externally installed Playwright Chromium, and `MILO_PLAYWRIGHT_MODULE` as above. It does not read your normal browser profile or send API requests.
+
+Set `MILO_LEGACY_ZIP` to an old Milo ZIP to additionally load a mixed installation (old background / new popup) and verify an actionable reload message rather than a blank root. Temporary profiles and extracted fixtures are removed after the test.

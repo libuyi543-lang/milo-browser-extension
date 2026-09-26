@@ -1,4 +1,4 @@
-# Milo Browser Extension 0.3.0
+# Milo Browser Extension 0.3.1
 
 划词看释义，保存原句与来源，在原网页双语阅读。
 

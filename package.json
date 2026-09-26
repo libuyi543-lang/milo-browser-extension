@@ -1,6 +1,6 @@
 {
   "name": "milo-translator-extension",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Milo Translator Extension: Context-aware progressive AI bilingual reading & vocabulary building Chrome extension",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "build": "npm run build:mv3",
     "devbuild:mv3": "webpack --config webpack.mv3.config.js --mode production --debug",
     "type-check": "tsc --noEmit",
-    "test": "jest --runInBand test/specs/background/milo-storage.spec.ts test/specs/models/MiloWord.spec.ts test/specs/selection/context.spec.ts test/specs/services/BingDictionaryProvider.spec.ts test/specs/background/deepseek.spec.ts test/specs/background/ai-providers.spec.ts test/specs/content/page-translation.spec.ts test/specs/_helpers/extension-lifecycle.spec.ts test/specs/_helpers/browser-api.spec.ts test/specs/background/deepseek-cost.spec.ts test/specs/background/translation-cache.spec.ts test/specs/background/request-control.spec.ts test/specs/content/popup-position.spec.ts",
+    "test": "jest --runInBand test/specs/background/milo-storage.spec.ts test/specs/models/MiloWord.spec.ts test/specs/selection/context.spec.ts test/specs/services/BingDictionaryProvider.spec.ts test/specs/services/aiSettings.spec.ts test/specs/background/deepseek.spec.ts test/specs/background/ai-providers.spec.ts test/specs/content/page-translation.spec.ts test/specs/_helpers/extension-lifecycle.spec.ts test/specs/_helpers/browser-api.spec.ts test/specs/background/deepseek-cost.spec.ts test/specs/background/translation-cache.spec.ts test/specs/background/request-control.spec.ts test/specs/content/popup-position.spec.ts",
     "test:legacy": "jest --testTimeout 20000",
     "test:watch": "jest --watch",
     "package": "node scripts/package-milo.js",

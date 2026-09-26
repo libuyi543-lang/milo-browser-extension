@@ -23,6 +23,7 @@ export const AISettingsPanel: FC<{
   const [busy, setBusy] = useState('')
   const [tip, setTip] = useState('')
   const [error, setError] = useState(false)
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
     let active = true
     getAISettings()
@@ -34,16 +35,17 @@ export const AISettingsPanel: FC<{
         setExpanded(!value.configured)
         onConfigured(value.configured)
       })
-      .catch(() => {
+      .catch(error => {
         if (active) {
-          setTip('设置读取失败，请重新打开 Milo')
+          setTip(error.message || '设置读取失败，请重新加载 Milo')
           setError(true)
+          onConfigured(false)
         }
       })
     return () => {
       active = false
     }
-  }, [onConfigured])
+  }, [onConfigured, retry])
   const definition = getAIProvider(provider)
   const profile =
     settings && settings.profiles.find(item => item.id === provider)
@@ -251,6 +253,28 @@ export const AISettingsPanel: FC<{
         >
           {tip}
         </p>
+      )}
+      {error && !settings && (
+        <div className="milo-setting-actions">
+          <button
+            type="button"
+            className="milo-secondary"
+            onClick={() => browser.tabs.create({ url: 'chrome://extensions' })}
+          >
+            打开扩展管理
+          </button>
+          <button
+            type="button"
+            className="milo-secondary"
+            onClick={() => {
+              setTip('')
+              setError(false)
+              setRetry(value => value + 1)
+            }}
+          >
+            重新读取设置
+          </button>
+        </div>
       )}
     </section>
   )

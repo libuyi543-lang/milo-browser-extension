@@ -3,7 +3,7 @@
 ## 下载并加载
 
 1. 使用 Chrome 128 或更新版本。
-2. 从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.3.0.zip`。
+2. 从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.3.1.zip`。
 3. 解压到一个固定目录。加载后不要移动或删除该目录。
 4. 在地址栏输入 `chrome://extensions`，打开右上角「开发者模式」。
 5. 点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的目录。
@@ -37,6 +37,7 @@
 
 | 问题 | 处理 |
 | --- | --- |
+| 工具栏窗口一片空白 / 后台版本尚未更新 | 在扩展管理页重新加载 Milo，再打开图标。V0.3.1 已增加失配提示与恢复入口 |
 | 没有浮窗 | 刷新页面，确认扩展启用，尝试普通 HTTP/HTTPS 页面的英文单词 |
 | 浏览器内部页 / 商店无法翻译 | Chrome 限制注入，改用普通网页 |
 | API 余额、鉴权或限流错误 | 检查自己的密钥、余额和服务状态，再重试 |
