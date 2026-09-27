@@ -118,6 +118,12 @@ To keep Milo visible, open Chrome's puzzle menu and pin Milo. Extensions cannot 
 
 ---
 
+## Text workspace · V0.5.1
+
+A compact bilingual editor with source/target languages, copy feedback, keyboard translation and clear progress states. Editing cancels pending requests and marks stale results. Drafts survive in-app navigation without being written to permanent storage.
+
+![Text workspace rendered with local demo data](docs/images/text-workspace.png)
+
 ## Desktop workspace · V0.5.0
 
 Open **Tools and reading settings** from the toolbar, or press `Alt+Shift+M`.

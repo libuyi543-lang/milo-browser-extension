@@ -78,6 +78,7 @@ async function main() {
   try {
     context = await chromium.launchPersistentContext('', {
       headless: true,
+      ignoreDefaultArgs: ['--disable-extensions'],
       channel: 'chromium',
       viewport: { width: 1280, height: 900 },
       ...(process.env.MILO_CHROMIUM_PATH
@@ -218,18 +219,18 @@ async function main() {
     await work.getByRole('button', { name: '阅读设置', exact: true }).click()
     if (
       (await work
-        .locator('select')
+        .locator('section:visible select')
         .first()
         .locator('option')
         .count()) < 100
     )
       throw new Error('Missing language choices')
     await work
-      .locator('select')
+      .locator('section:visible select')
       .nth(3)
       .selectOption('translation')
     await work
-      .locator('select')
+      .locator('section:visible select')
       .nth(4)
       .selectOption('boxed')
     await work
@@ -251,7 +252,7 @@ async function main() {
     if (!(await reader.locator('#first').isVisible()))
       throw new Error('Source was not restored')
     await work
-      .locator('select')
+      .locator('section:visible select')
       .nth(3)
       .selectOption('bilingual')
     await work

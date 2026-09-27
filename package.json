@@ -1,6 +1,6 @@
 {
   "name": "milo-translator-extension",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Milo Translator Extension: Context-aware progressive AI bilingual reading & vocabulary building Chrome extension",
   "private": true,
   "scripts": {

@@ -35,6 +35,21 @@ describe('explicit Chinese input → English translation', () => {
     expect(JSON.stringify(data.milo_translation_cache_v1)).not.toContain('巴黎便宜酒店')
   })
 
+  it('isolates manual source-language overrides from defaults and other cached languages', async () => {
+    data.milo_translation_preferences_v1 = { source: 'fr', target: 'zh-CN' }
+    const api = require('@/background/ai-translation')
+    await api.translateGeneralText('A shared draft.', 'zh-CN', undefined, 'en')
+    await api.translateGeneralText('A shared draft.', 'zh-CN', undefined, 'en')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(JSON.parse(fetchMock.mock.calls[0][1].body).messages[1].content).source).toBe('en')
+    await api.translateGeneralText('A shared draft.', 'zh-CN')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(JSON.parse(fetchMock.mock.calls[1][1].body).messages[1].content).source).toBe('fr')
+    expect(data.milo_translation_preferences_v1.source).toBe('fr')
+    await expect(api.translateGeneralText('A shared draft.', 'zh-CN', undefined, 'bad-language')).rejects.toThrow('不支持')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
   it('uses the active AI provider and its own credentials', async () => {
     const api = require('@/background/ai-translation')
     await api.saveAISettings({ provider: 'xiaomi', model: 'mimo-v2.6-flash', apiKey: 'xiaomi-demo-token' })

@@ -74,7 +74,12 @@ message.addListener('MILO_TRANSLATE_TEXT', async (msg, sender) => {
   try {
     return {
       text: await withSession(msg.payload.sessionId, sender, signal =>
-        translateGeneralText(msg.payload.text, msg.payload.target, signal)
+        translateGeneralText(
+          msg.payload.text,
+          msg.payload.target,
+          signal,
+          msg.payload.source
+        )
       )
     }
   } catch (error) {

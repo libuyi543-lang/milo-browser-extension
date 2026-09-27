@@ -62,7 +62,12 @@ export type MessageConfig = MessageConfigType<{
     response: { preferences?: TranslationPreferences; error?: string }
   }
   MILO_TRANSLATE_TEXT: {
-    payload: { text: string; target?: LanguageCode; sessionId?: string }
+    payload: {
+      text: string
+      target?: LanguageCode
+      sessionId?: string
+      source?: LanguageCode
+    }
     response: { text?: string; error?: string }
   }
   MILO_SHOW_TEXT: { payload: { text: string }; response: boolean }

@@ -25,11 +25,12 @@ export async function savePreferences(
 export async function translateText(
   text: string,
   target?: LanguageCode,
-  sessionId?: string
+  sessionId?: string,
+  source?: LanguageCode
 ): Promise<string> {
   const result = await message.send<'MILO_TRANSLATE_TEXT'>({
     type: 'MILO_TRANSLATE_TEXT',
-    payload: { text, target, sessionId }
+    payload: { text, target, sessionId, source }
   })
   if (!result || result.error || !result.text)
     throw new Error(

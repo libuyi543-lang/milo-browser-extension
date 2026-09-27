@@ -1,8 +1,8 @@
-# 安装与使用 Milo · V0.5.0
+# 安装与使用 Milo · V0.5.1
 
 ## 下载并加载
 
-1. 使用 Chrome 128+，从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.5.0.zip`。
+1. 使用 Chrome 128+，从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.5.1.zip`。
 2. 解压到固定目录；打开 `chrome://extensions`，开启“开发者模式”。
 3. 点击“加载已解压的扩展程序”，选择含 `manifest.json` 的目录。
 4. 点击浏览器拼图菜单，在 Milo 右侧点击图钉固定。
