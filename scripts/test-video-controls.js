@@ -4,7 +4,16 @@ const fs = require('fs')
 const http = require('http')
 const crypto = require('crypto')
 const { chromium } = require(process.env.MILO_PLAYWRIGHT_MODULE || 'playwright')
-const youtube = `<!doctype html><meta charset="utf-8"><title>Milo YouTube fixture</title><style>body{margin:40px auto;max-width:800px;font:16px/1.6 sans-serif;background:#f8faf6}ytd-watch-flexy{display:block}#movie_player{position:relative;background:#18271f}video{width:100%;height:400px}.ytp-caption-window-container{position:absolute;bottom:45px;left:20px;color:white}.ytp-subtitles-button{position:absolute;bottom:8px;right:15px}#below{padding:12px 0}</style><ytd-watch-flexy><div id="movie_player"><video></video><div class="ytp-caption-window-container"><span class="ytp-caption-segment"></span></div><button class="ytp-subtitles-button" aria-label="平台字幕 CC" aria-pressed="false">CC</button></div><div id="below"><h2>本地播放器结构测试</h2></div></ytd-watch-flexy><video id="thumbnail-preview" style="width:160px;height:90px"></video><script>document.querySelector('.ytp-subtitles-button').onclick=function(){const on=this.getAttribute('aria-pressed')!=='true';this.setAttribute('aria-pressed',String(on));document.querySelector('.ytp-caption-segment').textContent=on?'This is a readable YouTube caption.':''}</script>`
+const youtube = `<!doctype html><meta charset="utf-8"><title>Milo YouTube native fixture</title><style>body{margin:40px auto;max-width:800px;font:16px/1.6 sans-serif;background:#f8faf6}ytd-watch-flexy{display:block}#movie_player{position:relative;background:#18271f}video{width:100%;height:400px}.ytp-caption-window-container{position:absolute;bottom:65px;left:20px;color:white;font:22px/1.6 serif}.ytp-subtitles-button{position:absolute;bottom:8px;right:15px}#below{padding:12px 0}</style><ytd-watch-flexy><div id="movie_player"><video></video><div class="ytp-caption-window-container"><span class="ytp-caption-segment"></span></div><button class="ytp-subtitles-button" aria-label="平台字幕 CC" aria-pressed="false">CC</button></div><div id="below"><h2>原字幕区域 · 中文字幕示例</h2></div></ytd-watch-flexy><video id="thumbnail-preview" style="width:160px;height:90px"></video><script>
+const p=document.getElementById('movie_player'),cc=p.querySelector('button');
+const en={languageCode:'en',languageName:'English',vss_id:'.en',kind:'',is_translateable:true},cn={languageCode:'zh-CN',languageName:'中文',vss_id:'.zh-CN',kind:''};
+window.nativeTracks=[en,cn];window.nativeTrack=en;window.nativeVideoId='milo-local-fixture';window.nativeCue=0;
+const render=()=>{p.querySelector('.ytp-caption-segment').textContent=cc.getAttribute('aria-pressed')!=='true'?'':window.nativeTrack.languageCode==='zh-CN'||window.nativeTrack.translationLanguage?'这里只显示中文，沿用 YouTube 原有字幕。'+(window.nativeCue||''):'This is an English YouTube caption.'};
+cc.onclick=()=>{cc.setAttribute('aria-pressed',cc.getAttribute('aria-pressed')==='true'?'false':'true');render()};
+p.getVideoData=()=>({video_id:window.nativeVideoId});p.loadModule=()=>{};
+p.getOption=(_module,option)=>option==='track'?window.nativeTrack:option==='tracklist'?window.nativeTracks:[{languageCode:'zh-Hans',languageName:'中文（简体）'}];
+p.setOption=(_module,option,track)=>{window.nativeTrack=track;cc.setAttribute('aria-pressed',track.languageCode?'true':'false');render()};window.renderCue=render;
+</script>`
 const xhtml = `<!doctype html><meta charset="utf-8"><title>Milo X fixture</title><style>body{margin:30px auto;max-width:620px;font:16px/1.6 sans-serif;background:#fafcf8;padding-bottom:300px}article{padding:12px;margin-bottom:24px;border:1px solid #dce3d6;border-radius:12px}[data-testid=videoPlayer]{background:#1d2b23;position:relative}video{width:100%;height:235px}[data-testid=videoCaption]{color:white;padding:0 20px 10px}</style><article id="first"><p>First video</p><div data-testid="videoPlayer"><div data-testid="videoComponent"><video></video></div><div data-testid="videoCaption">First X video caption.</div></div></article><article id="second"><p>Second video</p><div data-testid="videoPlayer"><div data-testid="videoComponent"><video></video></div><div data-testid="videoCaption">Second X video caption.</div></div></article><script>window.outerClicks=0;document.querySelectorAll('article').forEach(article=>article.onclick=()=>window.outerClicks++)</script>`
 async function main() {
   const root = path.resolve(__dirname, '..')
@@ -102,54 +111,76 @@ async function main() {
     if (requests.length)
       throw new Error('Video entry made a request before click')
     await start.press('Enter')
-    await page.waitForFunction(() =>
-      document
-        .querySelector('[data-milo-subtitles]')
-        ?.textContent.includes('这是一条可以读取的 YouTube 字幕。')
-    )
-    if (
-      (await page
-        .locator('.ytp-subtitles-button')
-        .getAttribute('aria-pressed')) !== 'true'
-    )
-      throw new Error('YouTube CC was not enabled')
+    await page
+      .getByText('这里只显示中文，沿用 YouTube 原有字幕。', { exact: true })
+      .waitFor()
+    if (await page.locator('[data-milo-subtitles]').count())
+      throw new Error('YouTube still uses a separate overlay')
     if (
       (await page
         .locator('.ytp-caption-window-container')
-        .evaluate(node => getComputedStyle(node).opacity)) !== '0'
+        .evaluate(node => getComputedStyle(node).opacity)) !== '1'
     )
-      throw new Error('Native caption duplicates remain visible')
-    if (
-      (await page.locator('#below > [data-milo-video-controls]').count()) !== 1
-    )
-      throw new Error('YouTube button not placed below video')
+      throw new Error('Native caption region was hidden')
+    if (requests.length)
+      throw new Error('YouTube native translation sent an AI request')
     await page.locator('ytd-watch-flexy').screenshot({
       path: path.join(root, 'docs/images/video-translation.png')
     })
-    const count = requests.length
-    await page.waitForTimeout(1200)
-    if (requests.length !== count)
-      throw new Error('Unchanged cue translated repeatedly')
     await page
       .getByRole('button', { name: '关闭字幕翻译', exact: true })
       .click()
-    await page.locator('[data-milo-subtitles]').waitFor({ state: 'detached' })
     if (
       (await page
         .locator('.ytp-subtitles-button')
         .getAttribute('aria-pressed')) !== 'false'
     )
-      throw new Error('YouTube CC setting was not restored')
-    console.log(
-      'PASS: visible YouTube toggle, auto CC, bilingual cue, no duplicates, cache and restore.'
+      throw new Error('Original CC off state was not restored')
+    await page.evaluate(() => {
+      window.nativeTracks = [window.nativeTracks[0]]
+    })
+    await page
+      .getByRole('button', { name: '开启字幕翻译', exact: true })
+      .click()
+    await page.waitForFunction(
+      () => window.nativeTrack.translationLanguage?.languageCode === 'zh-Hans'
+    )
+    await page.evaluate(() => {
+      let n = 0
+      const id = setInterval(() => {
+        window.nativeCue = ++n
+        window.renderCue()
+        if (n === 8) clearInterval(id)
+      }, 60)
+    })
+    await page
+      .getByText('这里只显示中文，沿用 YouTube 原有字幕。8', { exact: true })
+      .waitFor()
+    if (requests.length) throw new Error('Rolling YouTube captions used AI')
+    await page
+      .getByRole('button', { name: '关闭字幕翻译', exact: true })
+      .click()
+    await page
+      .getByRole('button', { name: '开启字幕翻译', exact: true })
+      .click()
+    await page
+      .getByRole('button', { name: '关闭字幕翻译', exact: true })
+      .click()
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('.ytp-subtitles-button')
+          .getAttribute('aria-pressed') === 'false' &&
+        window.nativeTrack.languageCode === 'en'
     )
     await page
       .getByRole('button', { name: '开启字幕翻译', exact: true })
       .click()
-    await page.waitForFunction(() =>
-      document
-        .querySelector('[data-milo-subtitles]')
-        ?.textContent.includes('这是一条可以读取的 YouTube 字幕。')
+    await page.waitForFunction(
+      () => window.nativeTrack.translationLanguage?.languageCode === 'zh-Hans'
+    )
+    console.log(
+      'PASS: YouTube native Chinese-only display, direct/auto tracks, original styles and fast rolling cues without AI.'
     )
     await page.locator('#movie_player').evaluate(player => {
       const button = document.createElement('button')
@@ -168,7 +199,8 @@ async function main() {
     await page
       .getByRole('button', { name: '关闭字幕翻译', exact: true })
       .click()
-    await page.locator('[data-milo-subtitles]').waitFor({ state: 'detached' })
+    if (await page.locator('[data-milo-subtitles]').count())
+      throw new Error('Fullscreen created a separate caption overlay')
     await page.evaluate(() => document.exitFullscreen())
     await page.waitForFunction(
       () => !!document.querySelector('#below > [data-milo-video-controls]')

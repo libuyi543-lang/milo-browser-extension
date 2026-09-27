@@ -11,6 +11,7 @@ module.exports = {
   permissions: [
     '<all_urls>',
     'storage',
+    'scripting',
     'tabs',
     'contextMenus',
     'activeTab',

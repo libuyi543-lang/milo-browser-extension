@@ -27,6 +27,17 @@ export function setupVideoSubtitles() {
   let activatedCC: HTMLButtonElement | null = null
   const tracks = new Map<TextTrack, TextTrackMode>()
   const hidden = new Map<HTMLElement, string>()
+  const youtube = /(^|\.)(youtube\.com|youtube-nocookie\.com)$/.test(
+    window.location.hostname
+  )
+  let nativeRequested = false
+  let nativeReady = false
+  let nativePending = false
+  let nativeAttempts = 0
+  let nativeRetryAt = 0
+  let nativeRoute = ''
+  const route = () =>
+    new URL(location.href).searchParams.get('v') || location.pathname
   const controls = setupVideoControls(player => togglePlayer(player))
   const updateStatus = (value: string) => {
     status = value
@@ -34,6 +45,19 @@ export function setupVideoSubtitles() {
   }
   const clear = () => {
     generation++
+    if (nativeRequested)
+      message
+        .send<'MILO_YOUTUBE_CAPTIONS'>({
+          type: 'MILO_YOUTUBE_CAPTIONS',
+          payload: { command: 'stop' }
+        })
+        .catch(() => undefined)
+    nativeRequested = false
+    nativeReady = false
+    nativePending = false
+    nativeAttempts = 0
+    nativeRetryAt = 0
+    nativeRoute = ''
     if (pending) cancelTranslation(pending).catch(() => undefined)
     pending = ''
     if (interval !== undefined) clearInterval(interval)
@@ -165,9 +189,68 @@ export function setupVideoSubtitles() {
     if (video !== player) {
       clear()
       video = player
-      enableCC(player)
+      if (!youtube) enableCC(player)
       interval = window.setInterval(tick, 200)
       updateStatus('正在读取视频字幕…')
+    }
+    if (youtube) {
+      if (nativeRoute && nativeRoute !== route()) {
+        enabled = false
+        selected = null
+        clear()
+        updateStatus('')
+        return
+      }
+      nativeRoute = route()
+      if (nativeReady) {
+        const cc = videoContainer(player).querySelector('.ytp-subtitles-button')
+        const text = Array.from(
+          videoContainer(player).querySelectorAll('.ytp-caption-segment')
+        )
+          .map(node => node.textContent || '')
+          .join(' ')
+          .trim()
+        updateStatus(
+          cc?.getAttribute('aria-pressed') === 'false'
+            ? '播放器 CC 已关闭，请开启字幕'
+            : text
+            ? 'YouTube 中文字幕已开启'
+            : 'YouTube 中文字幕 · 等待字幕显示'
+        )
+        return
+      }
+      if (nativePending || nativeAttempts >= 3 || Date.now() < nativeRetryAt)
+        return
+      nativeAttempts++
+      nativePending = true
+      nativeRequested = true
+      const version = generation
+      updateStatus('正在切换 YouTube 中文字幕…')
+      try {
+        const result = await message.send<'MILO_YOUTUBE_CAPTIONS'>({
+          type: 'MILO_YOUTUBE_CAPTIONS',
+          payload: { command: 'start' }
+        })
+        if (!enabled || version !== generation) return
+        if (result.ok) {
+          nativeReady = true
+          updateStatus('已切换为 YouTube 中文字幕')
+        } else if (result.retryable && nativeAttempts < 3) {
+          nativeRetryAt = Date.now() + 1200
+          updateStatus('正在等待 YouTube 字幕加载…')
+        } else {
+          nativeAttempts = 3
+          updateStatus(result.error || 'YouTube 字幕切换失败，请关闭后重试')
+        }
+      } catch (error) {
+        if (version === generation) {
+          nativeAttempts = 3
+          updateStatus(error.message || '字幕切换失败，请重新加载扩展')
+        }
+      } finally {
+        if (version === generation) nativePending = false
+      }
+      return
     }
     if (overlay) position(overlay, player)
     let source = ''

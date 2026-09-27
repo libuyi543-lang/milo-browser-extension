@@ -33,6 +33,9 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
       update: (_state: VideoControlState) => undefined,
       cleanup: () => undefined
     }
+  const youtube = /(^|\.)(youtube\.com|youtube-nocookie\.com)$/.test(
+    window.location.hostname
+  )
   const paint = () =>
     records.forEach((record, video) => {
       const on = state.enabled && state.video === video
@@ -42,8 +45,18 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
         'aria-label',
         on ? '关闭字幕翻译' : '开启字幕翻译'
       )
-      record.button.title = on ? '点击关闭 Milo 双语字幕' : '开启 Milo 双语字幕'
-      const text = on ? state.status : 'Milo · 双语字幕'
+      record.button.title = youtube
+        ? on
+          ? '恢复之前的 YouTube 字幕'
+          : '切换为 YouTube 中文字幕'
+        : on
+        ? '点击关闭 Milo 双语字幕'
+        : '开启 Milo 双语字幕'
+      const text = on
+        ? state.status
+        : youtube
+        ? 'Milo · YouTube 中文字幕'
+        : 'Milo · 双语字幕'
       if (record.status.textContent !== text) record.status.textContent = text
     })
   const anchor = (video: HTMLVideoElement) => {

@@ -78,7 +78,7 @@ const App = () => {
               .catch(() => setAITip('请在普通视频网页中使用'))
         }}
       >
-        切换视频双语字幕
+        切换视频字幕翻译
       </button>
       <div className="milo-reading-actions">
         <button

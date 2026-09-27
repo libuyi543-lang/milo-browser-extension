@@ -72,6 +72,16 @@ export type MessageConfig = MessageConfigType<{
   }
   MILO_SHOW_TEXT: { payload: { text: string }; response: boolean }
   MILO_TOGGLE_SUBTITLES: { response: boolean }
+  MILO_YOUTUBE_CAPTIONS: {
+    payload: { command: 'start' | 'stop' }
+    response: {
+      ok: boolean
+      error?: string
+      retryable?: boolean
+      mode?: 'native' | 'auto'
+      videoId?: string
+    }
+  }
   MILO_TRANSLATE_IMAGE: {
     payload: { dataURL: string; provider: VisionProvider; sessionId: string }
     response: { result?: ImageTranslation; error?: string }

@@ -14,11 +14,13 @@ import {
 } from './ai-translation'
 import { getPreferences, savePreferences } from './preferences'
 import { startDesktopActions } from './desktop-actions'
+import { startYouTubeCaptionsServer } from './youtube-captions'
 
 // Keep the original extension message bridge, including PAGE_INFO and iframe routing.
 message.self.initServer()
 startMiloStorageServer()
 startDesktopActions()
+startYouTubeCaptionsServer()
 const sessions = new Map<
   string,
   { controller: AbortController; pending: number }
