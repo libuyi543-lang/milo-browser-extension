@@ -56,7 +56,8 @@ export function manageYouTubeCaptions(
     return { ok: true, videoId }
   }
   if (typeof player.loadModule === 'function') player.loadModule('captions')
-  const tracks: any[] = player.getOption('captions', 'tracklist') || []
+  const tracks: any[] =
+    player.getOption('captions', 'tracklist', { includeAsr: true }) || []
   if (!Array.isArray(tracks) || !tracks.length)
     return {
       ok: false,

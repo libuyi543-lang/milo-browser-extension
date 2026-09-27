@@ -65,6 +65,23 @@ describe('YouTube native caption switching', () => {
       languageName: '中文（简体）'
     })
   })
+  it('includes automatic speech-recognition tracks when a video has no manual subtitles', () => {
+    const automatic = { ...english, kind: 'asr', vss_id: 'a.en' }
+    player.getOption = (_module: string, option: string, options?: any) =>
+      option === 'track'
+        ? current
+        : option === 'tracklist'
+        ? options?.includeAsr
+          ? [automatic]
+          : []
+        : [{ languageCode: 'zh-Hans', languageName: '中文' }]
+    expect(manageYouTubeCaptions('start', 'zh-CN')).toMatchObject({
+      ok: true,
+      mode: 'auto'
+    })
+    expect(current.kind).toBe('asr')
+    expect(current.translationLanguage.languageCode).toBe('zh-Hans')
+  })
   it('does not overwrite manual language changes or restore a previous video track', () => {
     manageYouTubeCaptions('start', 'zh-CN')
     current = { languageCode: 'ja' }

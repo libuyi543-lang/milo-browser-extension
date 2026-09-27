@@ -11,7 +11,7 @@ window.nativeTracks=[en,cn];window.nativeTrack=en;window.nativeVideoId='milo-loc
 const render=()=>{p.querySelector('.ytp-caption-segment').textContent=cc.getAttribute('aria-pressed')!=='true'?'':window.nativeTrack.languageCode==='zh-CN'||window.nativeTrack.translationLanguage?'这里只显示中文，沿用 YouTube 原有字幕。'+(window.nativeCue||''):'This is an English YouTube caption.'};
 cc.onclick=()=>{cc.setAttribute('aria-pressed',cc.getAttribute('aria-pressed')==='true'?'false':'true');render()};
 p.getVideoData=()=>({video_id:window.nativeVideoId});p.loadModule=()=>{};
-p.getOption=(_module,option)=>option==='track'?window.nativeTrack:option==='tracklist'?window.nativeTracks:[{languageCode:'zh-Hans',languageName:'中文（简体）'}];
+p.getOption=(_module,option,options)=>option==='track'?window.nativeTrack:option==='tracklist'?window.nativeTracks.filter(t=>t.kind!=='asr'||options?.includeAsr):[{languageCode:'zh-Hans',languageName:'中文（简体）'}];
 p.setOption=(_module,option,track)=>{window.nativeTrack=track;cc.setAttribute('aria-pressed',track.languageCode?'true':'false');render()};window.renderCue=render;
 </script>`
 const xhtml = `<!doctype html><meta charset="utf-8"><title>Milo X fixture</title><style>body{margin:30px auto;max-width:620px;font:16px/1.6 sans-serif;background:#fafcf8;padding-bottom:300px}article{padding:12px;margin-bottom:24px;border:1px solid #dce3d6;border-radius:12px}[data-testid=videoPlayer]{background:#1d2b23;position:relative}video{width:100%;height:235px}[data-testid=videoCaption]{color:white;padding:0 20px 10px}</style><article id="first"><p>First video</p><div data-testid="videoPlayer"><div data-testid="videoComponent"><video></video></div><div data-testid="videoCaption">First X video caption.</div></div></article><article id="second"><p>Second video</p><div data-testid="videoPlayer"><div data-testid="videoComponent"><video></video></div><div data-testid="videoCaption">Second X video caption.</div></div></article><script>window.outerClicks=0;document.querySelectorAll('article').forEach(article=>article.onclick=()=>window.outerClicks++)</script>`
@@ -137,7 +137,13 @@ async function main() {
     )
       throw new Error('Original CC off state was not restored')
     await page.evaluate(() => {
-      window.nativeTracks = [window.nativeTracks[0]]
+      window.nativeTracks = [
+        Object.assign({}, window.nativeTracks[0], {
+          kind: 'asr',
+          vss_id: 'a.en'
+        })
+      ]
+      window.nativeTrack = window.nativeTracks[0]
     })
     await page
       .getByRole('button', { name: '开启字幕翻译', exact: true })
