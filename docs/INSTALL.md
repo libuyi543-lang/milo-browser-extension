@@ -1,8 +1,8 @@
-# 安装与使用 Milo · V0.5.1
+# 安装与使用 Milo · V0.5.2
 
 ## 下载并加载
 
-1. 使用 Chrome 128+，从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.5.1.zip`。
+1. 使用 Chrome 128+，从 [最新 Release](https://github.com/libuyi543-lang/milo-browser-extension/releases/latest) 下载 `Milo-Browser-Extension-v0.5.2.zip`。
 2. 解压到固定目录；打开 `chrome://extensions`，开启“开发者模式”。
 3. 点击“加载已解压的扩展程序”，选择含 `manifest.json` 的目录。
 4. 点击浏览器拼图菜单，在 Milo 右侧点击图钉固定。
@@ -17,6 +17,7 @@
 - 鼠标悬停段落按 Control：翻译这一段。
 - 输入框中文草稿，快速敲三下空格：默认译为英文；阅读设置可修改目标语言。
 - 工具栏 → **工具与阅读设置**：文本、文档、图片、字幕、词库备份、Zotero 和设置。
+- YouTube / X 视频下方“字幕翻译”：点击开启双语字幕，再点关闭。YouTube 尝试自动开启 CC；X 读取原生或页面可读字幕。没有字幕时提示等待，可使用现有右键音频入口。
 - 页面右键 Milo：图片翻译、圈选、Google Docs 导出、主动视频标签页音频翻译。
 - `Alt+Shift+Y` 正文，`Alt+Shift+M` 工作台，`Alt+Shift+O` 圈选；可在 `chrome://extensions/shortcuts` 修改。
 

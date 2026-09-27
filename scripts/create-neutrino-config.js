@@ -182,6 +182,7 @@ module.exports = function createNeutrinoConfig({
           { from: 'docs/INSTALL.md', to: 'docs/INSTALL.md', toType: 'file' },
           { from: 'docs/AI_PROVIDERS.md', to: 'docs/AI_PROVIDERS.md', toType: 'file' },
           { from: 'docs/DESKTOP_FEATURES.md', to: 'docs/DESKTOP_FEATURES.md', toType: 'file' },
+          { from: 'docs/images/video-translation.png', to: 'docs/images/video-translation.png', toType: 'file' },
           { from: 'docs/images/text-workspace.png', to: 'docs/images/text-workspace.png', toType: 'file' },
           { from: 'docs/images/desktop-documents.png', to: 'docs/images/desktop-documents.png', toType: 'file' },
           { from: 'docs/images/reading-settings.png', to: 'docs/images/reading-settings.png', toType: 'file' },

@@ -118,6 +118,12 @@ To keep Milo visible, open Chrome's puzzle menu and pin Milo. Extensions cannot 
 
 ---
 
+## One-click video subtitle toggle · V0.5.2
+
+YouTube and X videos have a Milo subtitle translation button below the player. Toggle bilingual captions on/off; YouTube CC is enabled when available and restored afterward. Requires readable caption tracks or caption text. Burned-in text is not extracted automatically; audio capture remains a separate explicit action.
+
+![Video toggle using an isolated player fixture and simulated API](docs/images/video-translation.png)
+
 ## Text workspace · V0.5.1
 
 A compact bilingual editor with source/target languages, copy feedback, keyboard translation and clear progress states. Editing cancels pending requests and marks stale results. Drafts survive in-app navigation without being written to permanent storage.
