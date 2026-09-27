@@ -10,6 +10,8 @@ const LEGACY_KEY = 'milo_deepseek_api_key'
 interface Profile {
   model: string
   apiKey: string
+  endpoint?: string
+  region?: string
 }
 interface Configuration {
   provider: AIProviderId
@@ -24,6 +26,22 @@ async function readStored(): Promise<Configuration> {
   for (const definition of AI_PROVIDERS) {
     const previous = value && value.profiles && value.profiles[definition.id]
     profiles[definition.id] = {
+      ...(definition.id === 'microsoft'
+        ? {
+            region:
+              previous && typeof previous.region === 'string'
+                ? previous.region
+                : ''
+          }
+        : {}),
+      ...(definition.id === 'custom'
+        ? {
+            endpoint:
+              previous && typeof previous.endpoint === 'string'
+                ? previous.endpoint
+                : ''
+          }
+        : {}),
       model:
         previous && typeof previous.model === 'string' && previous.model
           ? previous.model
@@ -65,13 +83,50 @@ export function saveAIConfiguration(input: AISettingsInput) {
       throw new Error('API Key 格式不正确，请粘贴完整密钥')
     const configuration = await readStored()
     const profile = configuration.profiles[input.provider]
+    let endpoint = profile.endpoint
+    const region =
+      input.provider === 'microsoft'
+        ? input.region === undefined
+          ? profile.region || ''
+          : input.region.trim()
+        : undefined
+    if (region && !/^[a-z0-9-]{1,40}$/.test(region))
+      throw new Error('Azure 区域名称无效')
+    if (input.provider === 'custom') {
+      const url = new URL(input.endpoint || endpoint || '')
+      if (
+        (url.protocol !== 'https:' &&
+          !(
+            url.protocol === 'http:' &&
+            ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+          )) ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash
+      )
+        throw new Error(
+          'API 地址必须为 HTTPS（本机地址可用 HTTP），不能包含凭据、查询参数或片段'
+        )
+      if (!url.pathname.endsWith('/chat/completions'))
+        url.pathname = url.pathname.replace(/\/$/, '') + '/chat/completions'
+      endpoint = url.href
+      if (model === 'your-model') throw new Error('请填写实际的模型名称')
+    }
     const nextKey = key === undefined ? profile.apiKey : key
     const changed =
       configuration.provider !== input.provider ||
       profile.model !== model ||
-      profile.apiKey !== nextKey
+      profile.apiKey !== nextKey ||
+      profile.endpoint !== endpoint ||
+      profile.region !== region
     configuration.provider = input.provider
-    configuration.profiles[input.provider] = { model, apiKey: nextKey }
+    configuration.profiles[input.provider] = {
+      model,
+      apiKey: nextKey,
+      ...(endpoint ? { endpoint } : {}),
+      ...(region ? { region } : {})
+    }
     await browser.storage.local.set({ [SETTINGS_KEY]: configuration })
     await browser.storage.local.remove(LEGACY_KEY)
     return changed

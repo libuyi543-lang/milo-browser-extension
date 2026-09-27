@@ -73,14 +73,16 @@ export const MiloInputPopup: FC<{
               disabled={busy}
               onClick={translate}
             >
-              {busy ? '正在翻译成英文…' : '重试翻译'}
+              {busy ? '正在翻译…' : '重试翻译'}
             </button>
             {error ? (
               <p className="milo-input-error" role="alert">
                 {error}
               </p>
             ) : (
-              <p className="milo-input-note">翻译后直接替换输入框内容</p>
+              <p className="milo-input-note">
+                使用已选目标语言，直接替换输入框内容
+              </p>
             )}
           </aside>
         )

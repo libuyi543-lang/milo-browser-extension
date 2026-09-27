@@ -1,3 +1,4 @@
+import { getPreferences } from '@/services/translation/general'
 import {
   captureWholeInput,
   InputSelection,
@@ -108,6 +109,14 @@ export function setupTripleSpaceTranslation(
   let gesture: Gesture | null = null
   let current: InputSelection | null = null
   let composing = false
+  let includeLatin = false
+  getPreferences()
+    .then(prefs => {
+      includeLatin =
+        prefs.inputTarget !== 'en' ||
+        (prefs.source !== 'auto' && prefs.source !== 'en')
+    })
+    .catch(() => undefined)
   const close = () => {
     if (current) {
       current = null
@@ -143,7 +152,7 @@ export function setupTripleSpaceTranslation(
     const draft = captureWholeInput(false)
     const now = Date.now()
     if (!gesture || now - gesture.last > TAP_GAP || !matches(gesture, draft)) {
-      const original = captureWholeInput()
+      const original = captureWholeInput(true, includeLatin)
       const position = original && caret(original)
       gesture =
         original && position
@@ -162,7 +171,7 @@ export function setupTripleSpaceTranslation(
     event.stopImmediatePropagation()
     try {
       restoreDraft(completed, draft!)
-      const restored = captureWholeInput()
+      const restored = captureWholeInput(true, includeLatin)
       if (!restored || restored.text !== completed.original.text) return
       current = restored
       onDraft(restored)

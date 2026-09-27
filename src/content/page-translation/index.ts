@@ -15,6 +15,12 @@ import {
   splitParagraph
 } from './paragraphs'
 import { collectReadingParagraphs } from './scope'
+import {
+  DEFAULT_PREFERENCES,
+  TranslationPreferences,
+  siteMatches
+} from '@/models/TranslationPreferences'
+import { getPreferences } from '@/services/translation/general'
 
 type Translate = (
   items: readonly ParagraphItem[],
@@ -36,6 +42,17 @@ export class PageTranslation {
   private inserted: HTMLElement[] = []
   private status: HTMLElement | null = null
   private sessionId = ''
+  private observer: MutationObserver | null = null
+  private dynamicTimer: number | undefined
+  private seen = new WeakMap<HTMLElement, string>()
+  private hidden: Array<{
+    element: HTMLElement
+    display: string
+    hadStyle: boolean
+  }> = []
+
+  private hiddenText = new Map<Text, string>()
+  private preferences = { ...DEFAULT_PREFERENCES }
   private cancel: (sessionId: string) => void
 
   private translate: Translate
@@ -63,7 +80,29 @@ export class PageTranslation {
     this.sessionId = `page_${Date.now().toString(36)}_${Math.random()
       .toString(36)
       .slice(2, 10)}`
-    this.paragraphs = collectReadingParagraphs(document.body, this.hostname)
+    this.paragraphs = []
+    this.jobs = []
+    this.parts = []
+    this.seen = new WeakMap()
+    this.enqueue()
+    if (this.preferences.dynamic) this.observe()
+    if (!this.jobs.length) {
+      this.showStatus('没有找到可翻译的正文', false)
+      return
+    }
+    this.run(this.generation)
+  }
+
+  configure(preferences: TranslationPreferences) {
+    this.preferences = preferences
+  }
+
+  private enqueue() {
+    const fresh = collectReadingParagraphs(
+      document.body,
+      this.hostname,
+      this.preferences.target
+    )
       .map((paragraph, index) => {
         const rect = paragraph.element.getBoundingClientRect()
         const visible = rect.bottom >= 0 && rect.top <= window.innerHeight
@@ -79,22 +118,85 @@ export class PageTranslation {
           a.group - b.group || a.distance - b.distance || a.index - b.index
       )
       .map(item => item.paragraph)
-    this.jobs = []
-    this.parts = this.paragraphs.map((paragraph, index) => {
+    fresh.forEach(paragraph => {
+      if (
+        this.paragraphs.length >= 1500 ||
+        this.seen.get(paragraph.element) === paragraph.text
+      )
+        return
+      this.seen.set(paragraph.element, paragraph.text)
+      const previousNodes = this.inserted.filter(
+        node =>
+          this.paragraphs[Number(node.dataset.miloParagraph)]?.element ===
+          paragraph.element
+      )
+      previousNodes.forEach(node => node.remove())
+      this.inserted = this.inserted.filter(
+        node => !previousNodes.includes(node)
+      )
+      const index = this.paragraphs.length
+      this.paragraphs.push(paragraph)
       const chunks = splitParagraph(paragraph.text)
       chunks.forEach((text, part) =>
         this.jobs.push({ id: `${index}:${part}`, text, paragraph: index, part })
       )
-      return Array(chunks.length).fill('')
+      this.parts.push(Array(chunks.length).fill(''))
     })
-    if (!this.jobs.length) {
-      this.showStatus('没有找到可翻译的英文正文', false)
-      return
-    }
-    this.run(this.generation)
+  }
+
+  private observe() {
+    this.observer = new MutationObserver(records => {
+      const own = (node: Node) => {
+        if (node instanceof Text && this.hiddenText.has(node) && !node.data)
+          return true
+        const element = node instanceof Element ? node : node.parentElement
+        return (
+          !!element &&
+          !!element.closest('.milo-root,.milo-external,[data-milo-translation]')
+        )
+      }
+      if (
+        records.every(
+          record =>
+            own(record.target) ||
+            (record.type === 'childList' &&
+              [
+                ...Array.from(record.addedNodes),
+                ...Array.from(record.removedNodes)
+              ].every(own))
+        )
+      )
+        return
+      if (this.dynamicTimer !== undefined) clearTimeout(this.dynamicTimer)
+      this.dynamicTimer = window.setTimeout(() => {
+        this.dynamicTimer = undefined
+        if (!this.active) return
+        this.enqueue()
+        if (this.cursor < this.jobs.length) this.run(this.generation)
+      }, 350)
+    })
+    this.observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true
+    })
   }
 
   clear() {
+    if (this.observer) this.observer.disconnect()
+    this.observer = null
+    if (this.dynamicTimer !== undefined) clearTimeout(this.dynamicTimer)
+    this.hidden.forEach(({ element, display, hadStyle }) => {
+      if (element.style.display === 'none') element.style.display = display
+      if (!hadStyle && !element.getAttribute('style'))
+        element.removeAttribute('style')
+      delete element.dataset.miloSourceHidden
+    })
+    this.hidden = []
+    this.hiddenText.forEach((text, node) => {
+      if (!node.data) node.data = text
+    })
+    this.hiddenText.clear()
     if (this.running && this.sessionId && isExtensionContextValid())
       this.cancel(this.sessionId)
     this.generation += 1
@@ -192,6 +294,54 @@ export class PageTranslation {
               this.parts[index].join('\n')
             )
             if (inserted) this.inserted.push(inserted)
+            if (inserted) {
+              inserted.dataset.miloParagraph = String(index)
+              inserted.lang = this.preferences.target
+              if (this.preferences.style === 'muted')
+                inserted.style.opacity = '0.65'
+              if (this.preferences.style === 'boxed')
+                Object.assign(inserted.style, {
+                  background: '#edf3e8',
+                  padding: '8px 12px',
+                  borderRadius: '8px'
+                })
+              if (this.preferences.style === 'underline')
+                inserted.style.textDecoration = 'underline dotted #8ca38b'
+              const source = this.paragraphs[index].element
+              if (this.preferences.display === 'translation') {
+                source
+                  .querySelectorAll<HTMLAnchorElement>('a[href]')
+                  .forEach(link => {
+                    if (/^https?:\/\//.test(link.href)) {
+                      const reference = document.createElement('a')
+                      reference.href = link.href
+                      reference.target = '_blank'
+                      reference.rel = 'noopener noreferrer'
+                      reference.textContent = ' ↗'
+                      reference.title = link.textContent || '原文链接'
+                      inserted.appendChild(reference)
+                    }
+                  })
+                if (inserted.parentElement === source)
+                  this.paragraphs[index].nodes.forEach(node => {
+                    this.hiddenText.set(node, node.data)
+                    node.data = ''
+                  })
+              }
+              if (
+                this.preferences.display === 'translation' &&
+                inserted.parentElement !== source
+              ) {
+                if (!this.hidden.some(item => item.element === source))
+                  this.hidden.push({
+                    element: source,
+                    display: source.style.display,
+                    hadStyle: source.hasAttribute('style')
+                  })
+                source.dataset.miloSourceHidden = 'true'
+                source.style.display = 'none'
+              }
+            }
           }
         }
         this.cursor += batch.length
@@ -211,7 +361,31 @@ export class PageTranslation {
 
 export function setupPageTranslation(onTrigger: () => void) {
   const controller = new PageTranslation()
-  const trigger = () => {
+  let disposed = false
+  let preferences = { ...DEFAULT_PREFERENCES }
+  const ready = getPreferences()
+    .then(value => {
+      preferences = value
+      controller.configure(value)
+      if (
+        !disposed &&
+        !siteMatches(window.location.hostname, value.excludedSites) &&
+        siteMatches(window.location.hostname, value.automaticSites)
+      ) {
+        onTrigger()
+        controller.toggle()
+      }
+    })
+    .catch(() => undefined)
+  const trigger = async () => {
+    await ready
+    preferences = await getPreferences().catch(() => preferences)
+    if (disposed) return
+    controller.configure(preferences)
+    if (siteMatches(window.location.hostname, preferences.excludedSites)) {
+      controller.clear()
+      return
+    }
     onTrigger()
     controller.toggle()
   }
@@ -239,19 +413,22 @@ export function setupPageTranslation(onTrigger: () => void) {
             ))
       )
     if (editing) return
+    if (siteMatches(window.location.hostname, preferences.excludedSites)) return
     event.preventDefault()
     event.stopImmediatePropagation()
     const selection = window.getSelection()
     if (selection) selection.removeAllRanges()
-    trigger()
+    trigger().catch(() => undefined)
   }
   const onMessage = (_msg: Message) => {
-    trigger()
-    return Promise.resolve(true)
+    return ready.then(() => {
+      return disposed ? true : trigger().then(() => true)
+    })
   }
   window.addEventListener('keydown', onKey, true)
   message.addListener('MILO_TOGGLE_PAGE_TRANSLATION', onMessage)
   return () => {
+    disposed = true
     controller.clear()
     window.removeEventListener('keydown', onKey, true)
     message.removeListener(onMessage)

@@ -1,3 +1,4 @@
+import { ImageTranslation, VisionProvider } from '@/models/MediaTranslation'
 import { Word, DBArea } from '@/_helpers/record-manager'
 import { MiloWord, MiloWordInput } from '@/models/MiloWord'
 import { DictID } from '@/app-config'
@@ -5,6 +6,10 @@ import { DictSearchResult } from '@/components/dictionaries/helpers'
 import { OpenUrlOptions } from '@/_helpers/browser-api'
 import { TranslationResult } from '@/services/translation/TranslationProvider'
 import { AISettings, AISettingsInput } from '@/models/AIProvider'
+import {
+  LanguageCode,
+  TranslationPreferences
+} from '@/models/TranslationPreferences'
 
 type MessageConfigType<
   T extends {
@@ -13,8 +18,65 @@ type MessageConfigType<
 > = T
 
 export type MessageConfig = MessageConfigType<{
+  MILO_ZOTERO: {
+    payload: { action: 'list' | 'read'; key?: string }
+    response: {
+      items?: Array<{ key: string; title: string }>
+      content?: string
+      error?: string
+    }
+  }
+  MILO_GOOGLE_DOCS_EXPORT: { response: boolean }
+  MILO_DELIVER_DOCUMENT: {
+    payload: { name: string; base64: string }
+    response: boolean
+  }
+  MILO_AUDIO_STREAM: {
+    payload: { token: string }
+    response: { streamId?: string; tabId?: number; error?: string }
+  }
+  MILO_AUDIO_CAPTION: {
+    payload: { source: string; translation: string }
+    response: boolean
+  }
+  MILO_BEGIN_AREA: { response: boolean }
+  MILO_CAPTURE_REGION: {
+    payload: {
+      x: number
+      y: number
+      width: number
+      height: number
+      viewportWidth: number
+      viewportHeight: number
+    }
+    response: boolean
+  }
+  MILO_FETCH_IMAGE: { payload: { url: string }; response: { data: string } }
+  MILO_NOTEBOOK_UPDATE: {
+    payload: { action: 'delete' | 'import'; word?: string; words?: unknown }
+    response: { deleted?: MiloWord; imported?: number; error?: string }
+  }
+  MILO_GET_PREFERENCES: { response: TranslationPreferences }
+  MILO_SAVE_PREFERENCES: {
+    payload: TranslationPreferences
+    response: { preferences?: TranslationPreferences; error?: string }
+  }
+  MILO_TRANSLATE_TEXT: {
+    payload: { text: string; target?: LanguageCode; sessionId?: string }
+    response: { text?: string; error?: string }
+  }
+  MILO_SHOW_TEXT: { payload: { text: string }; response: boolean }
+  MILO_TOGGLE_SUBTITLES: { response: boolean }
+  MILO_TRANSLATE_IMAGE: {
+    payload: { dataURL: string; provider: VisionProvider; sessionId: string }
+    response: { result?: ImageTranslation; error?: string }
+  }
+  MILO_TRANSCRIBE_AUDIO: {
+    payload: { dataURL: string; sessionId: string }
+    response: { text?: string; error?: string }
+  }
   MILO_TRANSLATE_WORD: {
-    payload: { text: string; sessionId?: string }
+    payload: { text: string; context?: string; sessionId?: string }
     response: { result?: TranslationResult; error?: string }
   }
   MILO_TRANSLATE_INPUT: {

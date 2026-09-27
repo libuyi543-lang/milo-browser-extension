@@ -1,3 +1,4 @@
+import { translateImage, transcribeAudio } from './media-translation'
 import { message } from '@/_helpers/browser-api'
 import { startMiloStorageServer } from './milo-storage'
 import {
@@ -8,12 +9,16 @@ import {
   translateWordWithAI,
   translateParagraphsWithAI,
   translateInputWithAI,
+  translateGeneralText,
   clearTranslationCache
 } from './ai-translation'
+import { getPreferences, savePreferences } from './preferences'
+import { startDesktopActions } from './desktop-actions'
 
 // Keep the original extension message bridge, including PAGE_INFO and iframe routing.
 message.self.initServer()
 startMiloStorageServer()
+startDesktopActions()
 const sessions = new Map<
   string,
   { controller: AbortController; pending: number }
@@ -55,6 +60,27 @@ if (nativeStorage && nativeStorage.setAccessLevel) {
 }
 
 message.addListener('MILO_AI_SETTINGS', () => getAISettings())
+message.addListener('MILO_GET_PREFERENCES', () => getPreferences())
+message.addListener('MILO_SAVE_PREFERENCES', async (msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('只能在 Milo 设置页修改偏好')
+    return { preferences: await savePreferences(msg.payload) }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_TRANSLATE_TEXT', async (msg, sender) => {
+  try {
+    return {
+      text: await withSession(msg.payload.sessionId, sender, signal =>
+        translateGeneralText(msg.payload.text, msg.payload.target, signal)
+      )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
 message.addListener('MILO_SAVE_AI_SETTINGS', async (msg, sender) => {
   try {
     if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
@@ -86,7 +112,7 @@ message.addListener('MILO_TRANSLATE_WORD', async (msg, sender) => {
   try {
     return {
       result: await withSession(msg.payload.sessionId, sender, signal =>
-        translateWordWithAI(msg.payload.text, signal)
+        translateWordWithAI(msg.payload.text, signal, msg.payload.context)
       )
     }
   } catch (error) {
@@ -137,4 +163,31 @@ message.addListener('MILO_TRANSLATE_ACTIVE_PAGE', async () => {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true })
   if (!tabs[0] || tabs[0].id == null) throw new Error('未找到当前网页')
   return message.send(tabs[0].id, { type: 'MILO_TOGGLE_PAGE_TRANSLATION' })
+})
+
+message.addListener('MILO_TRANSLATE_IMAGE', async (msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('请在 Milo 图像工具中使用 OCR')
+    return {
+      result: await withSession(msg.payload.sessionId, sender, signal =>
+        translateImage(msg.payload.dataURL, msg.payload.provider, signal)
+      )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_TRANSCRIBE_AUDIO', async (msg, sender) => {
+  try {
+    if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
+      throw new Error('请在 Milo 媒体工具中转录音频')
+    return {
+      text: await withSession(msg.payload.sessionId, sender, signal =>
+        transcribeAudio(msg.payload.dataURL, signal)
+      )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
 })

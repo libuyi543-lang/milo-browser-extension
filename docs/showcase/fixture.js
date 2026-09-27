@@ -18,7 +18,11 @@ const profiles = [
   { id: 'deepseek', model: 'deepseek-v4-flash', configured: true },
   { id: 'zhipu', model: 'glm-4.7-flash', configured: false },
   { id: 'xiaomi', model: 'mimo-v2.6-flash', configured: false },
-  { id: 'minimax', model: 'MiniMax-M2.7', configured: false }
+  { id: 'minimax', model: 'MiniMax-M2.7', configured: false },
+  { id: 'custom', model: 'your-model', configured: false },
+  { id:'deepl',model:'prefer_quality_optimized',configured:false },
+  { id:'google',model:'v2',configured:false },
+  { id:'microsoft',model:'v3',configured:false }
 ]
 let activeProvider = 'deepseek'
 const aiSettings = () => {

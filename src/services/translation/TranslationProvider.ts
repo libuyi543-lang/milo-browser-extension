@@ -5,5 +5,9 @@ export interface TranslationResult {
 }
 
 export interface TranslationProvider {
-  translate(text: string, sessionId?: string): Promise<TranslationResult>
+  translate(
+    text: string,
+    sessionId?: string,
+    context?: string
+  ): Promise<TranslationResult>
 }

@@ -1,3 +1,4 @@
+import { message } from '@/_helpers/browser-api'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { MiloWord } from '@/models/MiloWord'
@@ -58,6 +59,27 @@ const App = () => {
       )}
       <p className="milo-lead">阅读时遇见的词，都有来处。</p>
       <AISettingsPanel onConfigured={setConfigured} />
+      <button
+        className="milo-action"
+        onClick={() => browser.runtime.openOptionsPage()}
+      >
+        工具与阅读设置
+      </button>
+      <button
+        className="milo-link"
+        onClick={async () => {
+          const tabs = await browser.tabs.query({
+            active: true,
+            currentWindow: true
+          })
+          if (tabs[0]?.id)
+            message
+              .send(tabs[0].id, { type: 'MILO_TOGGLE_SUBTITLES' })
+              .catch(() => setAITip('请在普通视频网页中使用'))
+        }}
+      >
+        切换视频双语字幕
+      </button>
       <div className="milo-reading-actions">
         <button
           className="milo-action"
@@ -78,7 +100,7 @@ const App = () => {
           <br />
           Windows 使用 Ctrl+A；输入框内仍可全选。
           <br />
-          输入框内连续敲三下空格：中文转英文。
+          输入框内连续敲三下空格：翻译为设定语言（默认英文）。
         </p>
         {aiTip && (
           <p className="milo-ai-tip" role="status">

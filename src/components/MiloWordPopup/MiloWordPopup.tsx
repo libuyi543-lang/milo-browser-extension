@@ -89,7 +89,7 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
     const timer = selection
       ? setTimeout(() => {
           pending = true
-          translateWord(selection.word.text, sessionId)
+          translateWord(selection.word.text, sessionId, selection.word.context)
             .then(result => {
               if (!canceled) setTranslation(result)
             })
@@ -142,6 +142,23 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
               ×
             </button>
             <div className="milo-word">{selection.word.text}</div>
+            <div className="milo-pronunciation">
+              <span>{translation && translation.phonetic}</span>
+              <button
+                onClick={() => {
+                  if (!window.speechSynthesis) return
+                  const utterance = new SpeechSynthesisUtterance(
+                    selection.word.text
+                  )
+                  utterance.lang = 'en-US'
+                  utterance.rate = 0.9
+                  window.speechSynthesis.cancel()
+                  window.speechSynthesis.speak(utterance)
+                }}
+              >
+                朗读
+              </button>
+            </div>
             <div className="milo-meaning">
               {translation ? (
                 <>

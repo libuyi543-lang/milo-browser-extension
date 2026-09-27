@@ -48,7 +48,7 @@ describe('AI service configuration and routing', () => {
     expect(data.milo_ai_settings_v1.profiles.zhipu.apiKey).toBe('zhipu-demo-token')
   })
 
-  it.each(AI_PROVIDERS.map(item => [item.id, item]))('routes word and paragraph requests to %s using its own key and model', async (_id, definition: any) => {
+  it.each(AI_PROVIDERS.filter(item=>!['custom','deepl','google','microsoft'].includes(item.id)).map(item => [item.id, item]))('routes word and paragraph requests to %s using its own key and model', async (_id, definition: any) => {
     const api = require('@/background/ai-translation')
     await api.saveAISettings({ provider: definition.id, model: definition.defaultModel, apiKey: 'provider-demo-token' })
     const result = await api.translateWordWithAI('word')
@@ -153,4 +153,12 @@ describe('provider response compatibility', () => {
     expect(request.body.thinking).toEqual({ type: 'disabled' })
     expect(request.body.max_completion_tokens).toBe(700)
   })
+})
+
+describe('custom compatible endpoint validation',()=>{
+  const data:Record<string,any>={}
+  beforeEach(()=>{jest.resetModules();Object.keys(data).forEach(key=>delete data[key]);(browser.storage.local.get as any).callsFake(async()=>({...data}));(browser.storage.local.set as any).callsFake(async patch=>Object.assign(data,patch));(browser.storage.local.remove as any).callsFake(async key=>{delete data[key]})})
+  afterEach(()=>{for(const name of ['get','set','remove'])(browser.storage.local[name] as any).resetBehavior()})
+  it('normalizes an HTTPS base URL and returns metadata without the key',async()=>{const api=require('@/background/ai-translation');const value=await api.saveAISettings({provider:'custom',model:'test-model',endpoint:'https://service.example/v1',apiKey:'custom-demo-token'});expect(value.profiles.find(item=>item.id==='custom').endpoint).toBe('https://service.example/v1/chat/completions');expect(JSON.stringify(value)).not.toContain('custom-demo-token')})
+  it.each(['http://remote.example/v1','https://user:password@example.com/v1','https://example.com/v1?key=secret','https://example.com/v1#token'])('rejects a credential-bearing or insecure endpoint %s',async endpoint=>{const api=require('@/background/ai-translation');await expect(api.saveAISettings({provider:'custom',model:'test-model',endpoint,apiKey:'custom-demo-token'})).rejects.toThrow();expect(data.milo_ai_settings_v1).toBeUndefined()})
 })

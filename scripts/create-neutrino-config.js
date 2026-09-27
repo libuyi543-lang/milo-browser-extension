@@ -60,6 +60,10 @@ function createMains(manifestVersion) {
       }
     },
 
+    workspace: {
+      entry: 'workspace',
+      webext: { type: 'options_ui', manifest: { open_in_tab: true } }
+    },
     background: {
       entry: 'background',
       webext: {
@@ -177,11 +181,15 @@ module.exports = function createNeutrinoConfig({
           { from: 'PRIVACY.md', to: 'PRIVACY.md' },
           { from: 'docs/INSTALL.md', to: 'docs/INSTALL.md', toType: 'file' },
           { from: 'docs/AI_PROVIDERS.md', to: 'docs/AI_PROVIDERS.md', toType: 'file' },
+          { from: 'docs/DESKTOP_FEATURES.md', to: 'docs/DESKTOP_FEATURES.md', toType: 'file' },
+          { from: 'docs/images/desktop-documents.png', to: 'docs/images/desktop-documents.png', toType: 'file' },
+          { from: 'docs/images/reading-settings.png', to: 'docs/images/reading-settings.png', toType: 'file' },
           { from: 'docs/INPUT_TRANSLATION.md', to: 'docs/INPUT_TRANSLATION.md', toType: 'file' },
           { from: 'docs/images/ai-settings.png', to: 'docs/images/ai-settings.png', toType: 'file' },
           { from: 'docs/MILO_V01.md', to: 'docs/MILO_V01.md', toType: 'file' },
           { from: 'docs/MILO_V02.md', to: 'docs/MILO_V02.md', toType: 'file' },
           { context: 'assets', from: 'icon-*.png', to: 'assets/', toType: 'dir' },
+          { context: 'assets', from: 'vendor/**', to: '', toType: 'dir' },
           {
             context: 'src/_locales/manifest',
             from: '**/*',

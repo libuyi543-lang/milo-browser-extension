@@ -97,3 +97,6 @@
   font-weight: 700;
   letter-spacing: 0.06em;
 }
+
+.milo-pronunciation { display:flex; gap:10px; align-items:center; margin-top:7px; color:#839185; font-size:12px; }
+.milo-pronunciation button { border:0; background:none; color:#5c7f6e; font:inherit; padding:0; cursor:pointer; }

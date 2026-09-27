@@ -4,6 +4,8 @@ export interface ChatConfiguration {
   provider: AIProviderId
   model: string
   apiKey: string
+  endpoint?: string
+  region?: string
 }
 
 export function createChatRequest(
@@ -25,7 +27,11 @@ export function createChatRequest(
   if (config.provider === 'xiaomi') headers['api-key'] = config.apiKey
   else headers.Authorization = `Bearer ${config.apiKey}`
 
-  if (config.provider === 'minimax') {
+  if (config.provider === 'custom') {
+    if (/^(gpt-[5-9]|o[1-9])/.test(config.model))
+      body.max_completion_tokens = maxTokens
+    else body.max_tokens = maxTokens
+  } else if (config.provider === 'minimax') {
     body.reasoning_split = true
     body.temperature = 1
     body.max_completion_tokens = /^MiniMax-M3/i.test(config.model)
@@ -40,7 +46,8 @@ export function createChatRequest(
     else body.max_tokens = maxTokens
   }
   return {
-    endpoint: definition.endpoint,
+    endpoint:
+      config.provider === 'custom' ? config.endpoint! : definition.endpoint,
     headers,
     body,
     timeout: config.provider === 'minimax' ? 60000 : 25000

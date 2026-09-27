@@ -20,7 +20,7 @@
 
 When reading English articles or scrolling X/Twitter feeds: **Select a word → View definitions → Add to Milo**. The source sentence, page title, URL, and timestamp are captured automatically. When you encounter and save the same word on a different page, Milo appends the new context and increments its "Encounter Count".
 
-**Vocabulary is local-only. Mobile sync, review and export are not implemented. Uninstalling deletes local data.**
+**Vocabulary is local-only. JSON backup/restore and CSV export are available; mobile sync and review are not implemented. Uninstalling deletes local data.**
 
 > 💡 **Product Vision**: Milo Translator Extension is the desktop companion for the Milo vocabulary ecosystem. It bridges the gap between passive reading and long-term retention: **"Immersive Reading ➔ Context Capture ➔ Knowledge Consolidation"**.
 
@@ -92,7 +92,7 @@ See [input translation details](docs/INPUT_TRANSLATION.md). Only the focused dra
 
 Milo supports DeepSeek, Zhipu GLM, Xiaomi MiMo and MiniMax with independent saved credentials and model names. Click **Manage API**, select a service and save its key. Saving an empty key input keeps the previous key; use the remove button to clear it. **Save and test** makes a small billed hello request and bypasses caches.
 
-To keep Milo visible, open Chrome's puzzle menu and pin Milo. Extensions cannot force their own toolbar pin. MiniMax currently uses the China endpoint and China-platform keys; dedicated Coding/subscription endpoints and custom base URLs are not supported. See [provider details and official sources](docs/AI_PROVIDERS.md).
+To keep Milo visible, open Chrome's puzzle menu and pin Milo. Extensions cannot force their own toolbar pin. MiniMax currently uses the China endpoint and China-platform keys; custom Chat Completions endpoints are configurable, alongside DeepL, Google Cloud and Microsoft Translator. See [provider details and official sources](docs/AI_PROVIDERS.md).
 
 ![Actual multi-provider settings UI with local demo data](docs/images/ai-settings.png)
 
@@ -112,11 +112,25 @@ To keep Milo visible, open Chrome's puzzle menu and pin Milo. Extensions cannot 
 ## 🔒 Privacy & Security
 
 - **Local-Only Storage**: Your API Key is stored securely in `chrome.storage.local`. Injected webpage content scripts cannot access it.
-- **Direct Endpoints**: Requests connect directly to the selected official provider without intermediate private servers.
+- **Direct Endpoints**: Requests connect directly to the selected official provider or configured custom endpoint without intermediate private servers.
 - **Translation Content**: Selected words or extracted paragraphs are sent to the selected AI provider; API calls are billed to your account.
 - **Zero Tracking**: No browsing history, URLs, or private notebooks are tracked or collected.
 
 ---
+
+## Desktop workspace · V0.5.0
+
+Open **Tools and reading settings** from the toolbar, or press `Alt+Shift+M`.
+
+- Multi-language text, hover translation, dynamic paragraphs, bilingual / translation-only display, site rules and AI glossary.
+- Local TXT, Markdown, HTML, DOCX, ePub, PDF, SRT and VTT import, translation and export.
+- Batch image OCR, region capture, editable bounding boxes and PNG overlays.
+- Readable video subtitles, subtitle-file translation, local audio transcription and user-invoked tab audio translation (MiMo key required).
+- Google Docs export, read-only local Zotero text, vocabulary JSON backup and CSV / Anki import format.
+
+PDF export pairs original page images with translated text; image overlays use sampled backgrounds. These are not professional PDF re-typesetting or image inpainting. Mobile and online meetings remain out of scope. See [desktop capability and verification matrix](docs/DESKTOP_FEATURES.md) and [privacy](PRIVACY.md).
+
+![Actual desktop document workspace with local demo data](docs/images/desktop-documents.png)
 
 ## 💻 Local Development
 

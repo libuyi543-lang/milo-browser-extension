@@ -1,0 +1,3 @@
+PDF.js legacy browser build 5.6.205
+Source: https://github.com/mozilla/pdf.js
+License: Apache-2.0 (see LICENSE and bundled font notices)

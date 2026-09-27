@@ -27,7 +27,7 @@ if (!window.__MILO_SELECTION_LOADED__) {
       spanish: false,
       deutsch: false,
       others: false,
-      matchAll: false
+      matchAll: true
     },
     panelMode: {
       direct: true,

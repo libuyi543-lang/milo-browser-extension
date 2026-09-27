@@ -1,4 +1,12 @@
-export type AIProviderId = 'deepseek' | 'zhipu' | 'xiaomi' | 'minimax'
+export type AIProviderId =
+  | 'deepseek'
+  | 'zhipu'
+  | 'xiaomi'
+  | 'minimax'
+  | 'custom'
+  | 'deepl'
+  | 'google'
+  | 'microsoft'
 
 export interface AIProviderDefinition {
   id: AIProviderId
@@ -46,6 +54,51 @@ export const AI_PROVIDERS: readonly AIProviderDefinition[] = [
     models: ['MiniMax-M2.7', 'MiniMax-M2.7-highspeed', 'MiniMax-M3'],
     consoleURL: 'https://platform.minimax.cn/',
     docsURL: 'https://platform.minimax.cn/docs/api-reference/text-openai-api'
+  },
+  {
+    id: 'custom',
+    name: '自定义兼容 API',
+    endpoint: '',
+    defaultModel: 'your-model',
+    models: [],
+    consoleURL:
+      'https://github.com/libuyi543-lang/milo-browser-extension/blob/main/docs/AI_PROVIDERS.md',
+    docsURL:
+      'https://github.com/libuyi543-lang/milo-browser-extension/blob/main/docs/AI_PROVIDERS.md'
+  },
+  {
+    id: 'deepl',
+    name: 'DeepL',
+    endpoint: 'https://api.deepl.com/v2/translate',
+    defaultModel: 'prefer_quality_optimized',
+    models: [
+      'prefer_quality_optimized',
+      'latency_optimized',
+      'quality_optimized'
+    ],
+    consoleURL: 'https://www.deepl.com/your-account/keys',
+    docsURL:
+      'https://developers.deepl.com/api-reference/translate/request-translation'
+  },
+  {
+    id: 'google',
+    name: 'Google 翻译',
+    endpoint: 'https://translation.googleapis.com/language/translate/v2',
+    defaultModel: 'v2',
+    models: ['v2'],
+    consoleURL: 'https://console.cloud.google.com/apis/credentials',
+    docsURL:
+      'https://cloud.google.com/translate/docs/reference/rest/v2/translate'
+  },
+  {
+    id: 'microsoft',
+    name: 'Microsoft 翻译',
+    endpoint: 'https://api.cognitive.microsofttranslator.com/translate',
+    defaultModel: 'v3',
+    models: ['v3'],
+    consoleURL: 'https://portal.azure.com/',
+    docsURL:
+      'https://learn.microsoft.com/en-us/azure/ai-services/translator/text-translation/reference/v3/translate'
   }
 ]
 
@@ -59,6 +112,8 @@ export interface AIProfileSummary {
   id: AIProviderId
   model: string
   configured: boolean
+  endpoint?: string
+  region?: string
 }
 
 export interface AISettings {
@@ -74,4 +129,6 @@ export interface AISettingsInput {
   model: string
   /** An omitted key preserves the saved key. Keys are never returned to UI. */
   apiKey?: string
+  endpoint?: string
+  region?: string
 }

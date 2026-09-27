@@ -11,3 +11,7 @@ product and is not an official Saladict release or endorsed by its maintainer.
 The original project's name, logos, icons, and other brand assets are not part
 of the MIT code license. See [TRADEMARKS.md](./TRADEMARKS.md) for the original
 project's brand guidelines. Milo uses its own name, icon, and interface.
+
+Desktop document support bundles PDF.js 5.6.205 (Mozilla, Apache-2.0).
+License and font notices are included in vendor/pdfjs in distributions and assets/vendor/pdfjs in source.
+ePub/DOCX ZIP handling uses JSZip 3.10.1 (MIT or GPLv3 dual license; this project uses the MIT option).

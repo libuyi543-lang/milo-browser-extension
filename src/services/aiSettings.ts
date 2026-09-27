@@ -36,7 +36,9 @@ export function validateAISettings(value: unknown): AISettings {
     profiles: settings.profiles.map(item => ({
       id: item.id,
       model: item.model,
-      configured: item.configured
+      configured: item.configured,
+      ...(item.region ? { region: item.region } : {}),
+      ...(item.endpoint ? { endpoint: item.endpoint } : {})
     })),
     cache: { entries: settings.cache.entries, bytes: settings.cache.bytes }
   }

@@ -14,6 +14,16 @@ export function isEnglishText(text: string) {
   const chinese = (text.match(/[\u3400-\u9fff]/g) || []).length
   return latin >= 3 && latin / (latin + chinese || 1) > 0.7
 }
+export function isReadingText(text: string, target = 'zh-CN') {
+  const letters = (text.match(/\p{L}/gu) || []).length
+  if (letters < 3) return false
+  const han = (text.match(/\p{Script=Han}/gu) || []).length
+  const latin = (text.match(/\p{Script=Latin}/gu) || []).length
+  if (/^zh/.test(target) && letters === han + latin) return isEnglishText(text)
+  if (target === 'ja' && /[\u3040-\u30ff]/.test(text)) return false
+  if (target === 'ko' && /[\uac00-\ud7af]/.test(text)) return false
+  return true
+}
 
 function visible(
   element: HTMLElement,
@@ -31,7 +41,8 @@ function visible(
     path.push(current)
     const style = getComputedStyle(current)
     if (
-      style.display === 'none' ||
+      (style.display === 'none' &&
+        current.dataset.miloSourceHidden !== 'true') ||
       style.visibility === 'hidden' ||
       style.visibility === 'collapse'
     ) {
@@ -46,7 +57,8 @@ function visible(
 
 export function collectParagraphs(
   root: HTMLElement,
-  visibility = new WeakMap<HTMLElement, boolean>()
+  visibility = new WeakMap<HTMLElement, boolean>(),
+  target = 'zh-CN'
 ): ReadingParagraph[] {
   const groups = new Map<HTMLElement, Text[]>()
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
@@ -74,7 +86,7 @@ export function collectParagraphs(
     element,
     nodes,
     text: cleanText(nodes.map(node => node.data).join(''))
-  })).filter(item => isEnglishText(item.text))
+  })).filter(item => isReadingText(item.text, target))
 }
 
 export function splitParagraph(text: string, limit = 2800): string[] {
@@ -103,6 +115,9 @@ export function insertTranslation(
 ): HTMLElement | null {
   if (
     !paragraph.element.isConnected ||
+    paragraph.nodes.some(
+      node => !node.isConnected || !paragraph.element.contains(node)
+    ) ||
     cleanText(paragraph.nodes.map(node => node.data).join('')) !==
       paragraph.text
   )

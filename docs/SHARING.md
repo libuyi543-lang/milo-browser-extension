@@ -10,6 +10,8 @@
 
 想看整篇？Mac 按 ⌘ A，Windows 按 Ctrl+A，中文直接出现在英文段落下面。看 X 时，只翻译正文，不把导航和侧栏也翻一遍。
 
+新版还加入文档与电子书翻译、图片 OCR、字幕工具、语言与样式设置，以及词库备份。PDF 是原页与译文对照，图片是区域文字覆盖。
+
 当前支持 Chrome 开发者模式安装，支持 DeepSeek、智谱、小米 MiMo 和 MiniMax，使用自己的 API Key。词条保存在本地，手机同步还在后续计划中。
 
 源码与安装包：https://github.com/libuyi543-lang/milo-browser-extension
@@ -30,6 +32,8 @@ https://github.com/libuyi543-lang/milo-browser-extension
 - `docs/images/bilingual.png`：正文逐段插入中文。
 - `docs/images/notebook.png`：本地收藏与 encounterCount。
 - `docs/images/ai-settings.png`：四家 AI 配置与模型切换。
+- `docs/images/desktop-documents.png`：本地 PDF 工作台。
+- `docs/images/reading-settings.png`：语言、样式与网站规则。
 - `assets/milo-app-icon.png`：高清品牌图标。
 
-UI 图由本地固定示例数据渲染，不包含用户密钥或私人文章。不要把手机同步、复习算法、商店上架或自动增量翻译写成已实现功能。此文档是可供用户分享的素材，没有自动向任何人发送消息。
+UI 图由本地固定示例数据渲染，不包含用户密钥或私人文章。不要把手机同步、复习算法、商店上架、在线会议、专业 PDF 重排或背景修复写成已实现功能。此文档是可供用户分享的素材，没有自动向任何人发送消息。

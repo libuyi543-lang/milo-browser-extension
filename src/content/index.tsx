@@ -10,6 +10,11 @@ import MiloWordPopup, {
 import { MiloInputPopup } from '@/components/MiloInputPopup'
 import { InputSelection } from './input-translation/selection'
 import { setupTripleSpaceTranslation } from './input-translation/shortcut'
+import { MiloTextPopup, TextSelection } from '@/components/MiloTextPopup'
+import { setupHoverTranslation } from './hover-translation'
+import { setupVideoSubtitles } from './video-subtitles'
+import { setupAreaTranslation } from './area-translation'
+import { setupGoogleDocsExport } from './google-docs'
 
 function isEnglishWord(value: string): boolean {
   return value.length <= 80 && /^[a-z][a-z'-]*$/i.test(value)
@@ -17,18 +22,28 @@ function isEnglishWord(value: string): boolean {
 
 const App = () => {
   const [selection, setSelection] = useState<MiloSelection | null>(null)
+  const [phrase, setPhrase] = useState<TextSelection | null>(null)
   const [inputSelection, setInputSelection] = useState<InputSelection | null>(
     null
   )
 
   useEffect(() => {
+    const hover = setupHoverTranslation()
+    const cleanupSubtitles = setupVideoSubtitles()
+    const cleanupArea = setupAreaTranslation()
+    const cleanupGoogleDocs = setupGoogleDocsExport()
     const cleanupInputSelection = setupTripleSpaceTranslation(value => {
       setInputSelection(value)
-      if (value) setSelection(null)
+      if (value) {
+        setSelection(null)
+        setPhrase(null)
+      }
     })
     const cleanupPageTranslation = setupPageTranslation(() => {
       setSelection(null)
       setInputSelection(null)
+      setPhrase(null)
+      hover.clear()
     })
     const onSelection = (messageValue: Message<'SELECTION'>) => {
       const { word, self, mouseX, mouseY } = messageValue.payload
@@ -39,6 +54,11 @@ const App = () => {
           .trim()
           .replace(/^[“”"‘’.,;:!?()[\]{}]+|[“”"‘’.,;:!?()[\]{}]+$/g, '')
       if (word && text && isEnglishWord(text)) setInputSelection(null)
+      setPhrase(
+        word && text && !isEnglishWord(text) && text.length <= 6500
+          ? { text, x: mouseX, y: mouseY }
+          : null
+      )
       setSelection(
         word && text && isEnglishWord(text)
           ? { word: { ...word, text }, x: mouseX, y: mouseY }
@@ -57,6 +77,11 @@ const App = () => {
     const stop = () => {
       setSelection(null)
       setInputSelection(null)
+      setPhrase(null)
+      hover.cleanup()
+      cleanupSubtitles()
+      cleanupArea()
+      cleanupGoogleDocs()
       cleanupPageTranslation()
       cleanupInputSelection()
       subscription.unsubscribe()
@@ -86,7 +111,18 @@ const App = () => {
         document.documentElement.appendChild(notice)
       }
     })
+    const showText = (msg: Message) => {
+      setSelection(null)
+      setPhrase({
+        text: (msg as Message<'MILO_SHOW_TEXT'>).payload.text.slice(0, 6500),
+        x: window.innerWidth / 2,
+        y: 90
+      })
+      return Promise.resolve(true)
+    }
+    message.addListener('MILO_SHOW_TEXT', showText)
     return () => {
+      message.removeListener('MILO_SHOW_TEXT', showText)
       unregisterInvalidation()
       stop()
     }
@@ -95,6 +131,7 @@ const App = () => {
   return (
     <>
       <MiloWordPopup selection={selection} onClose={() => setSelection(null)} />
+      <MiloTextPopup selection={phrase} onClose={() => setPhrase(null)} />
       <MiloInputPopup
         selection={inputSelection}
         onClose={() => setInputSelection(null)}

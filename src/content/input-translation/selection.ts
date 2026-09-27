@@ -53,8 +53,15 @@ function editableRoot(node: Node): HTMLElement | null {
 
 /** Snapshot an entire focused draft, without changing the user's current selection. */
 export function captureWholeInput(
-  requireChinese = true
+  requireChinese = true,
+  includeLatin = false
 ): InputSelection | null {
+  const eligible = (text: string) =>
+    includeLatin
+      ? /\p{L}/u.test(text)
+      : Array.from(text).some(
+          char => char.codePointAt(0)! > 127 && /\p{L}/u.test(char)
+        )
   const element = activeElement()
   if (isTextField(element)) {
     if (
@@ -66,8 +73,7 @@ export function captureWholeInput(
       return null
     const text = element.value
     if (
-      (requireChinese &&
-        (!chinese.test(text) || text.length > MAX_INPUT_TEXT)) ||
+      (requireChinese && (!eligible(text) || text.length > MAX_INPUT_TEXT)) ||
       text.length > MAX_INPUT_TEXT + 4
     )
       return null
@@ -91,7 +97,7 @@ export function captureWholeInput(
   range.selectNodeContents(editor)
   const text = range.toString()
   if (
-    (requireChinese && (!chinese.test(text) || text.length > MAX_INPUT_TEXT)) ||
+    (requireChinese && (!eligible(text) || text.length > MAX_INPUT_TEXT)) ||
     text.length > MAX_INPUT_TEXT + 4
   )
     return null

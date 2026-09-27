@@ -17,6 +17,12 @@ export function readingRoots(
   root: HTMLElement,
   hostname = window.location.hostname
 ): HTMLElement[] {
+  if (hostname === 'docs.google.com')
+    return Array.from(
+      root.querySelectorAll<HTMLElement>(
+        '.kix-lineview-text-block,[role=document][contenteditable=false]'
+      )
+    )
   if (X_HOST.test(hostname)) {
     const primary =
       root.querySelector<HTMLElement>('[data-testid="primaryColumn"]') || root
@@ -41,13 +47,18 @@ export function readingRoots(
 
 export function collectReadingParagraphs(
   root: HTMLElement,
-  hostname = window.location.hostname
+  hostname = window.location.hostname,
+  target = 'zh-CN'
 ): ReadingParagraph[] {
   const seen = new Set<HTMLElement>()
   const visibility = new WeakMap<HTMLElement, boolean>()
   return readingRoots(root, hostname).reduce<ReadingParagraph[]>(
     (all, readingRoot) => {
-      for (const paragraph of collectParagraphs(readingRoot, visibility)) {
+      for (const paragraph of collectParagraphs(
+        readingRoot,
+        visibility,
+        target
+      )) {
         if (!seen.has(paragraph.element)) {
           seen.add(paragraph.element)
           all.push(paragraph)

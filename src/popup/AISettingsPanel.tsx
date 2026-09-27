@@ -20,6 +20,8 @@ export const AISettingsPanel: FC<{
   const [provider, setProvider] = useState<AIProviderId>('deepseek')
   const [model, setModel] = useState(AI_PROVIDERS[0].defaultModel)
   const [apiKey, setAPIKey] = useState('')
+  const [endpoint, setEndpoint] = useState('')
+  const [region, setRegion] = useState('')
   const [busy, setBusy] = useState('')
   const [tip, setTip] = useState('')
   const [error, setError] = useState(false)
@@ -32,6 +34,13 @@ export const AISettingsPanel: FC<{
         setSettings(value)
         setProvider(value.provider)
         setModel(value.model)
+        setRegion(
+          value.profiles.find(item => item.id === value.provider)?.region || ''
+        )
+        setEndpoint(
+          value.profiles.find(item => item.id === value.provider)?.endpoint ||
+            ''
+        )
         setExpanded(!value.configured)
         onConfigured(value.configured)
       })
@@ -92,6 +101,8 @@ export const AISettingsPanel: FC<{
                     settings &&
                     settings.profiles.find(value => value.id === item.id)
                   setModel(saved ? saved.model : item.defaultModel)
+                  setRegion(saved?.region || '')
+                  setEndpoint(saved?.endpoint || '')
                   setAPIKey('')
                   setTip('')
                   setError(false)
@@ -111,6 +122,38 @@ export const AISettingsPanel: FC<{
               </button>
             ))}
           </div>
+          {provider === 'custom' && (
+            <>
+              <label className="milo-key-label" htmlFor="milo-endpoint">
+                API 地址
+              </label>
+              <input
+                id="milo-endpoint"
+                className="milo-key"
+                value={endpoint}
+                disabled={!!busy}
+                placeholder="https://your-service.example/v1"
+                onChange={e => setEndpoint(e.target.value)}
+                spellCheck={false}
+              />
+              <p className="milo-key-note">
+                仅兼容 Chat Completions 接口。此服务密钥只发送到这里填写的地址。
+              </p>
+            </>
+          )}
+          {provider === 'microsoft' && (
+            <>
+              <label className="milo-key-label">
+                Azure 资源区域（全局密钥可留空）
+              </label>
+              <input
+                className="milo-key"
+                value={region}
+                onChange={e => setRegion(e.target.value)}
+                placeholder="eastasia"
+              />
+            </>
+          )}
           <label className="milo-key-label" htmlFor="milo-model">
             模型
           </label>
@@ -200,7 +243,9 @@ export const AISettingsPanel: FC<{
                   const value = await saveAISettings({
                     provider,
                     model,
-                    apiKey: ''
+                    apiKey: '',
+                    endpoint: provider === 'custom' ? endpoint : undefined,
+                    region: provider === 'microsoft' ? region : undefined
                   })
                   setSettings(value)
                   setAPIKey('')
@@ -288,7 +333,9 @@ export const AISettingsPanel: FC<{
       const value = await saveAISettings({
         provider,
         model,
-        apiKey: apiKey.trim() || undefined
+        apiKey: apiKey.trim() || undefined,
+        endpoint: provider === 'custom' ? endpoint : undefined,
+        region: provider === 'microsoft' ? region : undefined
       })
       setSettings(value)
       setAPIKey('')
