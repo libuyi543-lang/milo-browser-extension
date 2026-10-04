@@ -1,4 +1,5 @@
 export type AIProviderId =
+  | 'google-free'
   | 'deepseek'
   | 'zhipu'
   | 'xiaomi'
@@ -16,9 +17,23 @@ export interface AIProviderDefinition {
   models: readonly string[]
   consoleURL: string
   docsURL: string
+  /** Works without an API key; used as the default and as the fallback. */
+  keyless?: boolean
 }
 
+export const FREE_PROVIDER: AIProviderId = 'google-free'
+
 export const AI_PROVIDERS: readonly AIProviderDefinition[] = [
+  {
+    id: 'google-free',
+    name: '免费翻译（Google）',
+    endpoint: 'https://translate.googleapis.com/translate_a',
+    defaultModel: 'gtx',
+    models: ['gtx'],
+    consoleURL: 'https://translate.google.com/',
+    docsURL: 'https://translate.google.com/',
+    keyless: true
+  },
   {
     id: 'deepseek',
     name: 'DeepSeek',

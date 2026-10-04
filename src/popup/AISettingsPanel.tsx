@@ -3,6 +3,7 @@ import {
   AI_PROVIDERS,
   AIProviderId,
   AISettings,
+  FREE_PROVIDER,
   getAIProvider
 } from '@/models/AIProvider'
 import {
@@ -17,7 +18,7 @@ export const AISettingsPanel: FC<{
 }> = ({ onConfigured }) => {
   const [settings, setSettings] = useState<AISettings | null>(null)
   const [expanded, setExpanded] = useState(false)
-  const [provider, setProvider] = useState<AIProviderId>('deepseek')
+  const [provider, setProvider] = useState<AIProviderId>(FREE_PROVIDER)
   const [model, setModel] = useState(AI_PROVIDERS[0].defaultModel)
   const [apiKey, setAPIKey] = useState('')
   const [endpoint, setEndpoint] = useState('')
@@ -59,13 +60,14 @@ export const AISettingsPanel: FC<{
   const profile =
     settings && settings.profiles.find(item => item.id === provider)
   const configured = !!profile && profile.configured
+  const usingFree = !!settings && !!getAIProvider(settings.provider).keyless
 
   return (
     <section className="milo-ai" aria-label="AI 翻译服务">
       <div className="milo-ai-heading">
         <span>
-          {settings ? getAIProvider(settings.provider).name : 'AI 翻译服务'}
-          {settings && settings.configured ? ' · 已配置' : ''}
+          {settings ? getAIProvider(settings.provider).name : '翻译服务'}
+          {settings && !usingFree && settings.configured ? ' · 已配置' : ''}
         </span>
         <button
           className="milo-link"
@@ -73,7 +75,7 @@ export const AISettingsPanel: FC<{
           onClick={() => setExpanded(!expanded)}
           disabled={!!busy}
         >
-          管理 API
+          {usingFree ? '使用自己的 AI' : '管理 API'}
         </button>
       </div>
       {expanded && (
@@ -83,6 +85,15 @@ export const AISettingsPanel: FC<{
             save(false)
           }}
         >
+          <p className="milo-key-note">
+            默认使用免费的 Google 翻译，无需配置（部分网络需能访问
+            Google）。配置自己的 AI 后，划词会结合原句给出语境释义。
+          </p>
+          <p className="milo-key-note">
+            使用翻译时，Milo
+            会向所选服务发送划选文字与原句、识别出的正文段落、当前输入文本或可读取的字幕文字。单词本记录保存在本地；YouTube
+            原生字幕切换不调用 AI。
+          </p>
           <div
             className="milo-provider-grid"
             role="group"
@@ -112,6 +123,8 @@ export const AISettingsPanel: FC<{
                 <span>
                   {settings && settings.provider === item.id
                     ? '当前使用'
+                    : item.keyless
+                    ? '免费'
                     : settings &&
                       settings.profiles.find(
                         value => value.id === item.id && value.configured
@@ -154,52 +167,56 @@ export const AISettingsPanel: FC<{
               />
             </>
           )}
-          <label className="milo-key-label" htmlFor="milo-model">
-            模型
-          </label>
-          <input
-            id="milo-model"
-            className="milo-key"
-            list="milo-model-list"
-            value={model}
-            disabled={!!busy}
-            onChange={event => setModel(event.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-          />
-          <datalist id="milo-model-list">
-            {definition.models.map(value => (
-              <option key={value} value={value} />
-            ))}
-          </datalist>
-          <label className="milo-key-label" htmlFor="milo-api-key">
-            {definition.name} API Key
-          </label>
-          <input
-            id="milo-api-key"
-            className="milo-key"
-            type="password"
-            value={apiKey}
-            disabled={!!busy}
-            autoComplete="off"
-            spellCheck={false}
-            placeholder={
-              configured
-                ? '已保存，留空保留；输入可替换'
-                : '粘贴此服务的 API Key'
-            }
-            onChange={event => setAPIKey(event.target.value)}
-          />
-          <p className="milo-key-note">
-            密钥仅保存在本浏览器，不回显。
-            <a
-              href={definition.consoleURL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              获取密钥 ↗
-            </a>
-          </p>
+          {!definition.keyless && (
+            <>
+              <label className="milo-key-label" htmlFor="milo-model">
+                模型
+              </label>
+              <input
+                id="milo-model"
+                className="milo-key"
+                list="milo-model-list"
+                value={model}
+                disabled={!!busy}
+                onChange={event => setModel(event.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <datalist id="milo-model-list">
+                {definition.models.map(value => (
+                  <option key={value} value={value} />
+                ))}
+              </datalist>
+              <label className="milo-key-label" htmlFor="milo-api-key">
+                {definition.name} API Key
+              </label>
+              <input
+                id="milo-api-key"
+                className="milo-key"
+                type="password"
+                value={apiKey}
+                disabled={!!busy}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={
+                  configured
+                    ? '已保存，留空保留；输入可替换'
+                    : '粘贴此服务的 API Key'
+                }
+                onChange={event => setAPIKey(event.target.value)}
+              />
+              <p className="milo-key-note">
+                密钥仅保存在本浏览器，不回显。
+                <a
+                  href={definition.consoleURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  获取密钥 ↗
+                </a>
+              </p>
+            </>
+          )}
           <div className="milo-setting-actions">
             <button
               className="milo-action"
@@ -226,11 +243,13 @@ export const AISettingsPanel: FC<{
               {busy === 'test' ? '正在测试…' : '保存并测试'}
             </button>
           </div>
-          <p className="milo-key-note">
-            测试会发送 hello 查询，产生少量 API 用量。模型需在你的账户中可用。
-            {provider === 'minimax' ? ' M2.x 包含推理，响应可能较慢。' : ''}
-          </p>
-          {configured && (
+          {!definition.keyless && (
+            <p className="milo-key-note">
+              测试会发送 hello 查询，产生少量 API 用量。模型需在你的账户中可用。
+              {provider === 'minimax' ? ' M2.x 包含推理，响应可能较慢。' : ''}
+            </p>
+          )}
+          {configured && !definition.keyless && (
             <button
               type="button"
               className="milo-link milo-remove-key"

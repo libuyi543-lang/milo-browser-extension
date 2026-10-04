@@ -191,6 +191,7 @@ module.exports = function createNeutrinoConfig({
           { from: 'docs/MILO_V01.md', to: 'docs/MILO_V01.md', toType: 'file' },
           { from: 'docs/MILO_V02.md', to: 'docs/MILO_V02.md', toType: 'file' },
           { context: 'assets', from: 'icon-*.png', to: 'assets/', toType: 'dir' },
+          { from: 'assets/youtube-timedtext.js', to: 'assets/youtube-timedtext.js', toType: 'file' },
           { context: 'assets', from: 'vendor/**', to: '', toType: 'dir' },
           {
             context: 'src/_locales/manifest',

@@ -112,6 +112,14 @@ export const Settings = () => {
           />{' '}
           页面有可读字幕时自动开启双语字幕
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={prefs.floatingButton}
+            onChange={e => update({ floatingButton: e.target.checked })}
+          />{' '}
+          在网页右侧显示 Milo 悬浮按钮（点击翻译 / 恢复正文）
+        </label>
       </div>
       <label>
         自动翻译的网站域名（每行一个，* 代表全部网站）
@@ -134,6 +142,18 @@ export const Settings = () => {
           }
         />
       </label>
+      {prefs.floatingButton && (
+        <label>
+          不显示悬浮按钮的网站
+          <textarea
+            rows={2}
+            value={prefs.floatingHiddenSites.join('\n')}
+            onChange={e =>
+              update({ floatingHiddenSites: e.target.value.split(/\n|,/) })
+            }
+          />
+        </label>
+      )}
       <label>
         AI 术语表（原文 = 指定译法，每行一个；传统翻译服务依照自身能力）
         <textarea

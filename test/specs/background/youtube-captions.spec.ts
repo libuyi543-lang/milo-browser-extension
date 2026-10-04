@@ -1,4 +1,36 @@
-import { manageYouTubeCaptions } from '@/background/youtube-captions'
+import {
+  manageYouTubeCaptions,
+  registerYouTubeTimedTextHook
+} from '@/background/youtube-captions'
+describe('YouTube caption hook registration', () => {
+  afterEach(() => {
+    delete (window as any).chrome
+  })
+  it('registers the page hook once and refreshes it afterwards', async () => {
+    let registered: any[] = []
+    const scripting = {
+      getRegisteredContentScripts: jest.fn(async () => registered),
+      registerContentScripts: jest.fn(async (scripts: any[]) => {
+        registered = scripts
+      }),
+      updateContentScripts: jest.fn(async () => undefined)
+    }
+    ;(window as any).chrome = { scripting }
+    await registerYouTubeTimedTextHook()
+    expect(scripting.registerContentScripts).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'milo-youtube-timedtext',
+        js: ['assets/youtube-timedtext.js'],
+        runAt: 'document_start',
+        world: 'MAIN',
+        matches: ['https://www.youtube.com/*', 'https://m.youtube.com/*']
+      })
+    ])
+    await registerYouTubeTimedTextHook()
+    expect(scripting.registerContentScripts).toHaveBeenCalledTimes(1)
+    expect(scripting.updateContentScripts).toHaveBeenCalledTimes(1)
+  })
+})
 describe('YouTube native caption switching', () => {
   let player: any
   let cc: HTMLButtonElement
@@ -92,6 +124,34 @@ describe('YouTube native caption switching', () => {
     player.getVideoData = () => ({ video_id: 'another-video' })
     manageYouTubeCaptions('stop', 'zh-CN')
     expect(current.languageCode).toBe('zh-CN')
+  })
+  it('selects the English source track for Milo subtitles and restores the previous one', () => {
+    current = { languageCode: 'zh-CN' }
+    cc.setAttribute('aria-pressed', 'true')
+    tracks = [
+      { ...english, kind: 'asr', vss_id: 'a.en' },
+      { ...english, languageCode: 'en-GB', vss_id: '.en-GB' },
+      { languageCode: 'zh-CN', kind: '' }
+    ]
+    expect(manageYouTubeCaptions('start', 'en')).toMatchObject({
+      ok: true,
+      mode: 'native',
+      videoId: 'test-video'
+    })
+    // A manual English track beats speech recognition.
+    expect(current.languageCode).toBe('en-GB')
+    expect(current.translationLanguage).toBeUndefined()
+    manageYouTubeCaptions('stop', 'en')
+    expect(current.languageCode).toBe('zh-CN')
+  })
+  it('never auto-translates into English and reports videos without English captions', () => {
+    tracks = [{ languageCode: 'ja', kind: '', is_translateable: true }]
+    current = {}
+    expect(manageYouTubeCaptions('start', 'en')).toEqual({
+      ok: false,
+      error: '这个视频没有英文字幕，Milo 目前只支持英文视频'
+    })
+    expect(current).toEqual({})
   })
   it('does not overwrite the original snapshot across loading retries and reports missing subtitles', () => {
     manageYouTubeCaptions('start', 'zh-CN')

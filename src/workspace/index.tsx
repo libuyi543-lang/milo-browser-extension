@@ -10,9 +10,11 @@ import { Notebook } from './Notebook'
 import { ZoteroTool } from './ZoteroTool'
 import { AISettingsPanel } from '@/popup/AISettingsPanel'
 import { PopupErrorBoundary } from '@/popup/ErrorBoundary'
+import { SHOW_ADVANCED_TOOLS } from '@/_helpers/milo-features'
 import './style.scss'
 document.title = 'Milo · 翻译工作台'
-const tabs = [
+const advanced = ['documents', 'images', 'media', 'zotero']
+const tabs = ([
   ['text', '文本翻译'],
   ['documents', '文档与电子书'],
   ['images', '图片与漫画'],
@@ -21,15 +23,18 @@ const tabs = [
   ['zotero', 'Zotero 文献'],
   ['settings', '阅读设置'],
   ['ai', 'AI 服务']
-] as const
+] as const).filter(([id]) => SHOW_ADVANCED_TOOLS || !advanced.includes(id))
 const groups = [
-  { title: '翻译工具', items: tabs.slice(0, 4) },
-  { title: '我的积累', items: tabs.slice(4, 6) },
-  { title: '偏好设置', items: tabs.slice(6) }
-]
+  { title: '翻译工具', ids: ['text', 'documents', 'images', 'media'] },
+  { title: '我的积累', ids: ['notebook', 'zotero'] },
+  { title: '偏好设置', ids: ['settings', 'ai'] }
+].map(group => ({
+  title: group.title,
+  items: tabs.filter(([id]) => group.ids.includes(id))
+}))
 const currentRoute = () => {
   const hash = window.location.hash.slice(1)
-  if (hash.startsWith('live-audio:')) return 'live-audio'
+  if (SHOW_ADVANCED_TOOLS && hash.startsWith('live-audio:')) return 'live-audio'
   return tabs.some(([id]) => id === hash) ? hash : 'text'
 }
 const Workspace = () => {

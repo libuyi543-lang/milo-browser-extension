@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { message } from '@/_helpers/browser-api'
 import { Message } from '@/typings/message'
@@ -15,6 +15,8 @@ import { setupHoverTranslation } from './hover-translation'
 import { setupVideoSubtitles } from './video-subtitles'
 import { setupAreaTranslation } from './area-translation'
 import { setupGoogleDocsExport } from './google-docs'
+import { setupFloatingButton } from './floating-button'
+import { newWord } from '@/_helpers/record-manager'
 
 function isEnglishWord(value: string): boolean {
   return value.length <= 80 && /^[a-z][a-z'-]*$/i.test(value)
@@ -26,10 +28,33 @@ const App = () => {
   const [inputSelection, setInputSelection] = useState<InputSelection | null>(
     null
   )
+  const subtitles = useRef<ReturnType<typeof setupVideoSubtitles> | null>(null)
+
+  useEffect(() => {
+    if (!selection && subtitles.current) subtitles.current.cardClosed()
+  }, [selection])
 
   useEffect(() => {
     const hover = setupHoverTranslation()
-    const cleanupSubtitles = setupVideoSubtitles()
+    const cleanupSubtitles = setupVideoSubtitles(word => {
+      setPhrase(null)
+      setInputSelection(null)
+      setSelection(
+        word
+          ? {
+              word: newWord({
+                text: word.word,
+                context: word.sentence,
+                title: word.title,
+                url: word.url
+              }),
+              x: word.x,
+              y: word.y
+            }
+          : null
+      )
+    })
+    subtitles.current = cleanupSubtitles
     const cleanupArea = setupAreaTranslation()
     const cleanupGoogleDocs = setupGoogleDocsExport()
     const cleanupInputSelection = setupTripleSpaceTranslation(value => {
@@ -39,12 +64,13 @@ const App = () => {
         setPhrase(null)
       }
     })
+    const floating = setupFloatingButton(() => cleanupPageTranslation.trigger())
     const cleanupPageTranslation = setupPageTranslation(() => {
       setSelection(null)
       setInputSelection(null)
       setPhrase(null)
       hover.clear()
-    })
+    }, floating.update)
     const onSelection = (messageValue: Message<'SELECTION'>) => {
       const { word, self, mouseX, mouseY } = messageValue.payload
       if (self) return
@@ -80,9 +106,11 @@ const App = () => {
       setPhrase(null)
       hover.cleanup()
       cleanupSubtitles()
+      subtitles.current = null
       cleanupArea()
       cleanupGoogleDocs()
       cleanupPageTranslation()
+      floating.cleanup()
       cleanupInputSelection()
       subscription.unsubscribe()
       escapeSubscription.unsubscribe()

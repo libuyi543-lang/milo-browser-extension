@@ -12,7 +12,11 @@ import {
   translateGeneralText,
   clearTranslationCache
 } from './ai-translation'
-import { getPreferences, savePreferences } from './preferences'
+import {
+  getPreferences,
+  savePreferences,
+  updateFloatingButton
+} from './preferences'
 import { startDesktopActions } from './desktop-actions'
 import { startYouTubeCaptionsServer } from './youtube-captions'
 
@@ -68,6 +72,18 @@ message.addListener('MILO_SAVE_PREFERENCES', async (msg, sender) => {
     if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
       throw new Error('只能在 Milo 设置页修改偏好')
     return { preferences: await savePreferences(msg.payload) }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_FLOATING_BUTTON', async (msg, sender) => {
+  try {
+    return {
+      preferences: await updateFloatingButton(
+        msg.payload,
+        sender.tab && sender.tab.url
+      )
+    }
   } catch (error) {
     return { error: error.message }
   }

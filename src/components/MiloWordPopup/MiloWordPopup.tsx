@@ -37,6 +37,7 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [retry, setRetry] = useState(0)
   const generation = useRef(0)
   const savingLock = useRef(false)
   const observer = useRef<CardObserver | null>(null)
@@ -108,6 +109,14 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
       if (pending && isExtensionContextValid())
         cancelTranslation(sessionId).catch(() => undefined)
     }
+  }, [selection, retry])
+
+  // Subtitle words can be looked up in fullscreen video; follow the card there.
+  useEffect(() => {
+    const host = document.getElementById('milo-word-popup-root')
+    const parent = document.fullscreenElement || document.documentElement
+    if (selection && host && host.parentElement !== parent)
+      parent.appendChild(host)
   }, [selection])
 
   const position = selection
@@ -159,7 +168,7 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
                 朗读
               </button>
             </div>
-            <div className="milo-meaning">
+            <div className="milo-meaning" role="status">
               {translation ? (
                 <>
                   <span className="milo-pos">{translation.partOfSpeech}</span>
@@ -169,6 +178,16 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
                 error || '正在查找释义…'
               )}
             </div>
+            {translation && translation.senses && (
+              <ul className="milo-senses">
+                {translation.senses.slice(1, 4).map(sense => (
+                  <li key={sense.pos + sense.meaning}>
+                    <span className="milo-pos">{sense.pos}</span>
+                    {sense.meaning}
+                  </li>
+                ))}
+              </ul>
+            )}
             {selection.word.context && (
               <p className="milo-sentence">“{selection.word.context}”</p>
             )}
@@ -179,12 +198,14 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
             >
               {saved ? '✓ 已加入 Milo' : saving ? '正在保存…' : '＋ 加入 Milo'}
             </button>
-            {error && (
-              <div className="milo-error" role="status">
-                {error}
-              </div>
+            {error && !translation && (
+              <button
+                className="milo-retry"
+                onClick={() => setRetry(value => value + 1)}
+              >
+                重试查词
+              </button>
             )}
-            <div className="milo-footer">Milo</div>
           </article>
         )
       }

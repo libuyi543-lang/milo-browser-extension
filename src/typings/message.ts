@@ -7,6 +7,7 @@ import { OpenUrlOptions } from '@/_helpers/browser-api'
 import { TranslationResult } from '@/services/translation/TranslationProvider'
 import { AISettings, AISettingsInput } from '@/models/AIProvider'
 import {
+  FloatingButtonAction,
   LanguageCode,
   TranslationPreferences
 } from '@/models/TranslationPreferences'
@@ -61,6 +62,10 @@ export type MessageConfig = MessageConfigType<{
     payload: TranslationPreferences
     response: { preferences?: TranslationPreferences; error?: string }
   }
+  MILO_FLOATING_BUTTON: {
+    payload: FloatingButtonAction
+    response: { preferences?: TranslationPreferences; error?: string }
+  }
   MILO_TRANSLATE_TEXT: {
     payload: {
       text: string
@@ -73,7 +78,8 @@ export type MessageConfig = MessageConfigType<{
   MILO_SHOW_TEXT: { payload: { text: string }; response: boolean }
   MILO_TOGGLE_SUBTITLES: { response: boolean }
   MILO_YOUTUBE_CAPTIONS: {
-    payload: { command: 'start' | 'stop' }
+    /** `language: 'en'` selects the English source track for Milo's own subtitles. */
+    payload: { command: 'start' | 'stop'; language?: 'en' }
     response: {
       ok: boolean
       error?: string
@@ -108,6 +114,7 @@ export type MessageConfig = MessageConfigType<{
   MILO_AI_SETTINGS: {
     response: AISettings
   }
+  MILO_OPEN_AI_SETTINGS: { response: boolean }
   MILO_SAVE_AI_SETTINGS: {
     payload: AISettingsInput
     response: AISettings & { error?: string }

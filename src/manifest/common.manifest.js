@@ -26,10 +26,11 @@ module.exports = {
     'open-workspace': {
       suggested_key: { default: 'Alt+Shift+M', mac: 'Alt+Shift+M' },
       description: '打开 Milo 翻译工作台'
-    },
-    'translate-area': {
-      suggested_key: { default: 'Alt+Shift+O', mac: 'Alt+Shift+O' },
-      description: 'Milo 圈选翻译'
     }
+    // 圈选翻译随 SHOW_ADVANCED_TOOLS 隐藏；恢复时加回：
+    // 'translate-area': {
+    //   suggested_key: { default: 'Alt+Shift+O', mac: 'Alt+Shift+O' },
+    //   description: 'Milo 圈选翻译'
+    // }
   }
 }

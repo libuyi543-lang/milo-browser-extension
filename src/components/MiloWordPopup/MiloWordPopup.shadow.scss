@@ -6,7 +6,7 @@
   max-width: calc(100vw - 24px);
   max-height: min(70vh, 420px);
   overflow-y: auto;
-  padding: 25px 25px 16px;
+  padding: 25px 25px 20px;
   border: 1px solid #e8e7df;
   border-radius: 18px;
   background: #fbfaf6;
@@ -38,7 +38,7 @@
 }
 
 .milo-meaning {
-  min-height: 48px;
+  min-height: 24px;
   margin-top: 15px;
   color: #526157;
   font-size: 15px;
@@ -57,6 +57,26 @@
   margin-top: 9px;
   color: #a15c4e;
   font-size: 12px;
+}
+
+.milo-senses {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  color: #6a786e;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.milo-retry {
+  display: block;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #426951;
+  font: 600 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
 }
 
 .milo-sentence {
@@ -87,16 +107,6 @@
   cursor: default;
 }
 
-.milo-footer {
-  margin-top: 14px;
-  padding-top: 11px;
-  border-top: 1px solid #e8e7df;
-  color: #5c7f6e;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
 
 .milo-pronunciation { display:flex; gap:10px; align-items:center; margin-top:7px; color:#839185; font-size:12px; }
 .milo-pronunciation button { border:0; background:none; color:#5c7f6e; font:inherit; padding:0; cursor:pointer; }

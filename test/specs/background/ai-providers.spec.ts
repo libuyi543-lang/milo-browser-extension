@@ -48,7 +48,7 @@ describe('AI service configuration and routing', () => {
     expect(data.milo_ai_settings_v1.profiles.zhipu.apiKey).toBe('zhipu-demo-token')
   })
 
-  it.each(AI_PROVIDERS.filter(item=>!['custom','deepl','google','microsoft'].includes(item.id)).map(item => [item.id, item]))('routes word and paragraph requests to %s using its own key and model', async (_id, definition: any) => {
+  it.each(AI_PROVIDERS.filter(item=>!['google-free','custom','deepl','google','microsoft'].includes(item.id)).map(item => [item.id, item]))('routes word and paragraph requests to %s using its own key and model', async (_id, definition: any) => {
     const api = require('@/background/ai-translation')
     await api.saveAISettings({ provider: definition.id, model: definition.defaultModel, apiKey: 'provider-demo-token' })
     const result = await api.translateWordWithAI('word')

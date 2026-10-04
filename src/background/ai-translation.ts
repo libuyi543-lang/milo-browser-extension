@@ -10,9 +10,14 @@ import {
 import {
   AI_PROVIDERS,
   AISettingsInput,
+  FREE_PROVIDER,
   getAIProvider
 } from '@/models/AIProvider'
-import { readAIConfiguration, saveAIConfiguration } from './ai-settings'
+import {
+  isUsable,
+  readAIConfiguration,
+  saveAIConfiguration
+} from './ai-settings'
 import { getPreferences } from './preferences'
 import { LanguageCode, languageName } from '@/models/TranslationPreferences'
 import {
@@ -45,12 +50,16 @@ function configurationCache(config: ChatConfiguration) {
   }
   return cache
 }
+/** A selected provider without a key falls back to the free translator. */
 async function activeConfiguration(): Promise<ChatConfiguration> {
   const settings = await readAIConfiguration()
-  return {
-    provider: settings.provider,
-    ...settings.profiles[settings.provider]
-  }
+  const provider = isUsable(
+    settings.provider,
+    settings.profiles[settings.provider]
+  )
+    ? settings.provider
+    : FREE_PROVIDER
+  return { provider, ...settings.profiles[provider] }
 }
 const wordFlights = new SingleFlight<TranslationResult>()
 const paragraphFlights = new SingleFlight<Map<string, string>>()
@@ -72,12 +81,12 @@ export async function getAISettings() {
   const profile = configuration.profiles[configuration.provider]
   return {
     provider: configuration.provider,
-    configured: !!profile.apiKey,
+    configured: isUsable(configuration.provider, profile),
     model: profile.model,
     profiles: AI_PROVIDERS.map(item => ({
       id: item.id,
       model: configuration.profiles[item.id].model,
-      configured: !!configuration.profiles[item.id].apiKey,
+      configured: isUsable(item.id, configuration.profiles[item.id]),
       ...(configuration.profiles[item.id].region
         ? { region: configuration.profiles[item.id].region }
         : {}),
@@ -85,10 +94,7 @@ export async function getAISettings() {
         ? { endpoint: configuration.profiles[item.id].endpoint }
         : {})
     })),
-    cache: await configurationCache({
-      provider: configuration.provider,
-      ...profile
-    })
+    cache: await configurationCache(await activeConfiguration())
       .info()
       .catch(() => ({ entries: 0, bytes: 0 }))
   }
@@ -131,16 +137,41 @@ export async function testAIConnection() {
 export function parseWord(value: any): TranslationResult {
   if (!value || typeof value.meaning !== 'string' || !value.meaning.trim())
     throw new Error('模型未返回有效释义，请重试')
+  const text = (item: unknown, limit: number) =>
+    typeof item === 'string' && item.trim()
+      ? item.trim().slice(0, limit)
+      : undefined
+  const list = <T>(items: unknown, map: (item: any) => T | undefined) =>
+    Array.isArray(items)
+      ? (items
+          .map(map)
+          .filter(Boolean)
+          .slice(0, 8) as T[])
+      : []
+  const senses = list(value.senses, item =>
+    item && text(item.meaning, 300)
+      ? { pos: text(item.pos, 20) || '', meaning: text(item.meaning, 300)! }
+      : undefined
+  )
+  const definitions = list(value.definitions, item =>
+    item && text(item.gloss, 500)
+      ? {
+          pos: text(item.pos, 20) || '',
+          gloss: text(item.gloss, 500)!,
+          ...(text(item.example, 500)
+            ? { example: text(item.example, 500) }
+            : {})
+        }
+      : undefined
+  )
+  const examples = list(value.examples, item => text(item, 500))
   return {
     meaning: value.meaning.trim().slice(0, 1000),
-    phonetic:
-      typeof value.phonetic === 'string'
-        ? value.phonetic.trim().slice(0, 100)
-        : undefined,
-    partOfSpeech:
-      typeof value.partOfSpeech === 'string'
-        ? value.partOfSpeech.trim().slice(0, 100)
-        : undefined
+    phonetic: text(value.phonetic, 100),
+    partOfSpeech: text(value.partOfSpeech, 100),
+    ...(senses.length ? { senses } : {}),
+    ...(definitions.length ? { definitions } : {}),
+    ...(examples.length ? { examples } : {})
   }
 }
 
@@ -202,7 +233,7 @@ async function executeChat(
   if (signal && signal.aborted) throw cancellationError()
   if (version !== revision) throw cancellationError()
   const provider = getAIProvider(config.provider)
-  if (!config.apiKey)
+  if (!config.apiKey && !provider.keyless)
     throw new Error(`请先在 Milo 扩展中设置 ${provider.name} API Key`)
   const request = createChatRequest(config, instruction, input, maxTokens)
   if (media) {
@@ -255,7 +286,11 @@ async function executeChat(
       throw new Error('翻译超时，请重试')
     }
     if (error.name === 'TypeError')
-      throw new Error('网络连接失败，请检查网络后重试')
+      throw new Error(
+        provider.keyless
+          ? '无法连接 Google 翻译，请检查网络；也可以在设置中使用自己的 AI 服务'
+          : '网络连接失败，请检查网络后重试'
+      )
     throw error
   } finally {
     clearTimeout(timer)
@@ -279,9 +314,11 @@ export async function translateWordWithAI(
   const cache = configurationCache(config)
   const sentence =
     typeof context === 'string' ? context.trim().slice(0, 1000) : ''
-  const glossary = (await getPreferences()).glossary
+  // The free dictionary ignores context and glossary, so share one cache entry.
+  const free = config.provider === FREE_PROVIDER
+  const glossary = free ? '' : (await getPreferences()).glossary
   const lookup =
-    sentence || glossary
+    !free && (sentence || glossary)
       ? JSON.stringify({ word: text, context: sentence, glossary })
       : text
   const cached = await cache.get('word', lookup).catch(() => undefined)
@@ -413,15 +450,16 @@ export async function translateInputWithAI(
     (preferences.source === 'auto' || preferences.source === 'en')
   )
     throw new Error('请选择不超过 2000 字符的非目标语言文字')
+  const version = revision
+  const config = await activeConfiguration()
   if (
     preferences.inputTarget !== 'en' ||
     preferences.glossary ||
-    !/[\u3400-\u9fff]/.test(text)
+    !/[\u3400-\u9fff]/.test(text) ||
+    isDirectProvider(config.provider)
   )
     return translateGeneralText(text, preferences.inputTarget, signal)
   if (signal && signal.aborted) throw cancellationError()
-  const version = revision
-  const config = await activeConfiguration()
   if (version !== revision) throw cancellationError()
   const cache = configurationCache(config)
   const cached = await cache.get('input', text).catch(() => undefined)

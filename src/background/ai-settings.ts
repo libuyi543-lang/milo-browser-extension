@@ -2,6 +2,7 @@ import {
   AI_PROVIDERS,
   AIProviderId,
   AISettingsInput,
+  FREE_PROVIDER,
   getAIProvider
 } from '@/models/AIProvider'
 
@@ -59,10 +60,15 @@ async function readStored(): Promise<Configuration> {
     provider:
       value && AI_PROVIDERS.some(item => item.id === value.provider)
         ? value.provider
-        : 'deepseek',
+        : profiles.deepseek.apiKey
+        ? 'deepseek'
+        : FREE_PROVIDER,
     profiles
   }
 }
+
+export const isUsable = (provider: AIProviderId, profile: Profile) =>
+  !!getAIProvider(provider).keyless || !!profile.apiKey
 
 export async function readAIConfiguration() {
   await writes

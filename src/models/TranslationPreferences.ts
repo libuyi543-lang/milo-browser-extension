@@ -41,6 +41,11 @@ export interface TranslationPreferences {
   automaticSites: string[]
   excludedSites: string[]
   glossary: string
+  /** Page-edge Milo button: the main entry for page translation. */
+  floatingButton: boolean
+  floatingHiddenSites: string[]
+  /** Vertical position of the button as a fraction of the viewport height. */
+  floatingTop: number
 }
 export const DEFAULT_PREFERENCES: TranslationPreferences = {
   source: 'auto',
@@ -53,7 +58,10 @@ export const DEFAULT_PREFERENCES: TranslationPreferences = {
   subtitles: false,
   automaticSites: [],
   excludedSites: [],
-  glossary: ''
+  glossary: '',
+  floatingButton: true,
+  floatingHiddenSites: [],
+  floatingTop: 0.62
 }
 export function languageName(code: string): string {
   if (code === 'auto') return '自动识别原文语言'
@@ -91,7 +99,12 @@ export function parsePreferences(value: any): TranslationPreferences {
         ).slice(0, 100) as string[])
       : []
   if (!value || typeof value !== 'object')
-    return { ...defaults, automaticSites: [], excludedSites: [] }
+    return {
+      ...defaults,
+      automaticSites: [],
+      excludedSites: [],
+      floatingHiddenSites: []
+    }
   return {
     source:
       !value.source || value.source === 'auto'
@@ -115,6 +128,23 @@ export function parsePreferences(value: any): TranslationPreferences {
     glossary:
       typeof value.glossary === 'string'
         ? value.glossary.trim().slice(0, 4000)
-        : ''
+        : '',
+    floatingButton:
+      typeof value.floatingButton === 'boolean'
+        ? value.floatingButton
+        : defaults.floatingButton,
+    floatingHiddenSites: sites(value.floatingHiddenSites),
+    floatingTop: clampTop(value.floatingTop)
   }
 }
+
+export function clampTop(value: unknown): number {
+  return typeof value === 'number' && isFinite(value)
+    ? Math.min(0.92, Math.max(0.08, value))
+    : DEFAULT_PREFERENCES.floatingTop
+}
+
+export type FloatingButtonAction =
+  | { action: 'hide-site' }
+  | { action: 'hide-all' }
+  | { action: 'move'; top: number }

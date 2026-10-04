@@ -26,6 +26,11 @@ type Translate = (
   items: readonly ParagraphItem[],
   sessionId?: string
 ) => Promise<readonly ParagraphItem[]>
+export interface PageTranslationState {
+  active: boolean
+  running: boolean
+  failed: boolean
+}
 interface Job extends ParagraphItem {
   paragraph: number
   part: number
@@ -41,6 +46,7 @@ export class PageTranslation {
   private parts: string[][] = []
   private inserted: HTMLElement[] = []
   private status: HTMLElement | null = null
+  private statusTimer: number | undefined
   private sessionId = ''
   private observer: MutationObserver | null = null
   private dynamicTimer: number | undefined
@@ -56,6 +62,7 @@ export class PageTranslation {
   private cancel: (sessionId: string) => void
 
   private translate: Translate
+  private listener: ((state: PageTranslationState) => void) | undefined
   constructor(
     translate: Translate = translateParagraphs,
     private hostname = window.location.hostname,
@@ -95,6 +102,15 @@ export class PageTranslation {
 
   configure(preferences: TranslationPreferences) {
     this.preferences = preferences
+  }
+
+  onChange(listener: (state: PageTranslationState) => void) {
+    this.listener = listener
+  }
+
+  private notify(failed: boolean) {
+    if (this.listener)
+      this.listener({ active: this.active, running: this.running, failed })
   }
 
   private enqueue() {
@@ -205,14 +221,39 @@ export class PageTranslation {
     this.cursor = 0
     this.inserted.forEach(node => node.remove())
     this.inserted = []
-    if (this.status) this.status.remove()
-    this.status = null
+    this.removeStatus()
     this.paragraphs = []
     this.jobs = []
     this.parts = []
+    this.notify(false)
+  }
+
+  private removeStatus() {
+    if (this.statusTimer !== undefined) clearTimeout(this.statusTimer)
+    this.statusTimer = undefined
+    if (this.status) this.status.remove()
+    this.status = null
+  }
+
+  /** A finished translation needs no lingering notice; errors stay visible. */
+  private fadeStatus() {
+    this.statusTimer = window.setTimeout(() => {
+      const status = this.status
+      if (!status) return
+      const reduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (reduced) return this.removeStatus()
+      status.style.transition = 'opacity .3s ease-out'
+      status.style.opacity = '0'
+      this.statusTimer = window.setTimeout(() => this.removeStatus(), 300)
+    }, 2500)
   }
 
   private showStatus(text: string, retry: boolean) {
+    if (this.statusTimer !== undefined) clearTimeout(this.statusTimer)
+    this.statusTimer = undefined
+    if (this.status) this.status.style.opacity = ''
     if (!this.status) {
       this.status = document.createElement('div')
       this.status.className = 'milo-external'
@@ -234,6 +275,13 @@ export class PageTranslation {
       document.documentElement.appendChild(this.status)
     }
     this.status.textContent = `Milo · ${text} `
+    if (/API Key|配置 AI 服务/.test(text)) {
+      const configure = document.createElement('button')
+      configure.textContent = '配置 AI 服务'
+      configure.onclick = () =>
+        message.send({ type: 'MILO_OPEN_AI_SETTINGS' }).catch(() => undefined)
+      this.status.appendChild(configure)
+    }
     if (retry) {
       const button = document.createElement('button')
       button.textContent = '重试'
@@ -252,6 +300,7 @@ export class PageTranslation {
       font: 'inherit'
     })
     this.status.appendChild(cancel)
+    this.notify(retry)
   }
 
   private async run(version: number) {
@@ -349,6 +398,7 @@ export class PageTranslation {
       if (version === this.generation) {
         this.running = false
         this.showStatus(`已翻译 ${this.inserted.length} 段`, false)
+        this.fadeStatus()
       }
     } catch (error) {
       if (version === this.generation) {
@@ -359,8 +409,12 @@ export class PageTranslation {
   }
 }
 
-export function setupPageTranslation(onTrigger: () => void) {
+export function setupPageTranslation(
+  onTrigger: () => void,
+  onState?: (state: PageTranslationState) => void
+) {
   const controller = new PageTranslation()
+  if (onState) controller.onChange(onState)
   let disposed = false
   let preferences = { ...DEFAULT_PREFERENCES }
   const ready = getPreferences()
@@ -427,10 +481,13 @@ export function setupPageTranslation(onTrigger: () => void) {
   }
   window.addEventListener('keydown', onKey, true)
   message.addListener('MILO_TOGGLE_PAGE_TRANSLATION', onMessage)
-  return () => {
+  const cleanup = () => {
     disposed = true
     controller.clear()
     window.removeEventListener('keydown', onKey, true)
     message.removeListener(onMessage)
   }
+  return Object.assign(cleanup, {
+    trigger: () => trigger().catch(() => undefined)
+  })
 }

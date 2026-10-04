@@ -1,5 +1,6 @@
 import { message } from '@/_helpers/browser-api'
 import { readAIConfiguration } from './ai-settings'
+import { SHOW_ADVANCED_TOOLS } from '@/_helpers/milo-features'
 const native = (self as any).chrome
 const openWorkspace = (fragment = '') =>
   browser.tabs.create({
@@ -45,6 +46,10 @@ async function openAudioCapture(tab: browser.tabs.Tab) {
 }
 
 export function startDesktopActions() {
+  message.addListener('MILO_OPEN_AI_SETTINGS', async () => {
+    await openWorkspace('#ai')
+    return true
+  })
   if (native.contextMenus) {
     const install = () =>
       native.contextMenus.removeAll(() => {
@@ -59,6 +64,12 @@ export function startDesktopActions() {
           contexts: ['selection']
         })
         native.contextMenus.create({
+          id: 'milo-tools',
+          title: 'Milo · 翻译工作台',
+          contexts: ['page', 'selection']
+        })
+        if (!SHOW_ADVANCED_TOOLS) return
+        native.contextMenus.create({
           id: 'milo-image',
           title: 'Milo · 翻译这张图片',
           contexts: ['image']
@@ -67,11 +78,6 @@ export function startDesktopActions() {
           id: 'milo-area',
           title: 'Milo · 圈选文字区域',
           contexts: ['page', 'image']
-        })
-        native.contextMenus.create({
-          id: 'milo-tools',
-          title: 'Milo · 翻译工作台',
-          contexts: ['page', 'selection']
         })
         native.contextMenus.create({
           id: 'milo-google-docs',
@@ -129,7 +135,7 @@ export function startDesktopActions() {
         message
           .send(tab.id, { type: 'MILO_TOGGLE_PAGE_TRANSLATION' })
           .catch(() => undefined)
-      if (command === 'translate-area')
+      if (SHOW_ADVANCED_TOOLS && command === 'translate-area')
         message.send(tab.id, { type: 'MILO_BEGIN_AREA' }).catch(() => undefined)
     })
   message.addListener('MILO_CAPTURE_REGION', async (msg, sender) => {

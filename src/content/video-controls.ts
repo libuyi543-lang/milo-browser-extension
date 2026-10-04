@@ -3,6 +3,11 @@ export interface VideoControlState {
   video: HTMLVideoElement | null
   status: string
 }
+interface VideoSizeObserver {
+  observe(element: Element): void
+  unobserve(element: Element): void
+  disconnect(): void
+}
 export function supportsVideoControls(host = window.location.hostname) {
   return /(^|\.)(youtube\.com|youtube-nocookie\.com|x\.com|twitter\.com)$/.test(
     host
@@ -28,6 +33,8 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
   let state: VideoControlState = { enabled: false, video: null, status: '' }
   let timer: number | undefined
   let closed = false
+  let sizeObserver: VideoSizeObserver | null = null
+  const watched = new Set<HTMLVideoElement>()
   if (!supportsVideoControls())
     return {
       update: (_state: VideoControlState) => undefined,
@@ -45,18 +52,12 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
         'aria-label',
         on ? '关闭字幕翻译' : '开启字幕翻译'
       )
-      record.button.title = youtube
-        ? on
-          ? '恢复之前的 YouTube 字幕'
-          : '切换为 YouTube 中文字幕'
-        : on
+      record.button.title = on
         ? '点击关闭 Milo 双语字幕'
-        : '开启 Milo 双语字幕'
-      const text = on
-        ? state.status
         : youtube
-        ? 'Milo · YouTube 中文字幕'
-        : 'Milo · 双语字幕'
+        ? '开启英文 / 中文双语字幕，鼠标移到字幕上可暂停查词'
+        : '开启 Milo 双语字幕'
+      const text = on ? state.status : 'Milo · 双语字幕'
       if (record.status.textContent !== text) record.status.textContent = text
     })
   const anchor = (video: HTMLVideoElement) => {
@@ -69,6 +70,12 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
   const scan = () => {
     if (closed) return
     const videos = new Set(Array.from(document.querySelectorAll('video')))
+    watched.forEach(item => {
+      if (!videos.has(item)) {
+        sizeObserver?.unobserve(item)
+        watched.delete(item)
+      }
+    })
     records.forEach((record, video) => {
       if (!videos.has(video)) {
         record.host.remove()
@@ -77,7 +84,14 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
     })
     videos.forEach(video => {
       if (!isCaptionPlayer(video)) return
-      const rect = video.getBoundingClientRect()
+      if (!watched.has(video)) {
+        watched.add(video)
+        sizeObserver?.observe(video)
+      }
+      const rect = (youtube
+        ? videoContainer(video)
+        : video
+      ).getBoundingClientRect()
       if (rect.width < 80 || rect.height < 45) return
       let record = records.get(video)
       if (!record) {
@@ -167,6 +181,10 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
       }, 200)
   }
   const observer = new MutationObserver(schedule)
+  const ResizeObserverClass = (window as any).ResizeObserver as
+    | (new (callback: () => void) => VideoSizeObserver)
+    | undefined
+  if (ResizeObserverClass) sizeObserver = new ResizeObserverClass(schedule)
   observer.observe(document.documentElement, { childList: true, subtree: true })
   window.addEventListener('resize', schedule)
   document.addEventListener('fullscreenchange', schedule)
@@ -178,6 +196,8 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
     },
     cleanup() {
       closed = true
+      sizeObserver?.disconnect()
+      watched.clear()
       observer.disconnect()
       window.removeEventListener('resize', schedule)
       document.removeEventListener('fullscreenchange', schedule)
