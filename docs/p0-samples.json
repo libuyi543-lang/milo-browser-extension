@@ -1,0 +1,37 @@
+{
+  "note": "Fixed public URL inventory for P0. Category is a planned coverage label, not an observed pass. Reconfirm caption availability before judging a video.",
+  "web": [
+    { "id": "W01", "category": "ordinary article", "url": "https://science.nasa.gov/climate-change/" },
+    { "id": "W02", "category": "ordinary article", "url": "https://developer.chrome.com/docs/extensions/get-started" },
+    { "id": "W03", "category": "wiki", "url": "https://en.wikipedia.org/wiki/Artificial_intelligence" },
+    { "id": "W04", "category": "wiki", "url": "https://en.wikipedia.org/wiki/Climate_change" },
+    { "id": "W05", "category": "wiki long", "url": "https://en.wikipedia.org/wiki/History_of_the_Internet" },
+    { "id": "W06", "category": "wiki", "url": "https://en.wikipedia.org/wiki/Computer" },
+    { "id": "W07", "category": "documentation", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript" },
+    { "id": "W08", "category": "documentation", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Document" },
+    { "id": "W09", "category": "documentation", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Your_first_website" },
+    { "id": "W10", "category": "long reading", "url": "https://docs.python.org/3/tutorial/introduction.html" },
+    { "id": "W11", "category": "long reading", "url": "https://docs.python.org/3/library/asyncio.html" },
+    { "id": "W12", "category": "dynamic documentation", "url": "https://react.dev/learn" },
+    { "id": "W13", "category": "documentation", "url": "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs" },
+    { "id": "W14", "category": "dynamic repository", "url": "https://github.com/torvalds/linux" },
+    { "id": "W15", "category": "dynamic repository", "url": "https://github.com/microsoft/TypeScript" },
+    { "id": "W16", "category": "dynamic list", "url": "https://news.ycombinator.com/" },
+    { "id": "W17", "category": "dynamic list", "url": "https://stackoverflow.com/questions/tagged/javascript" },
+    { "id": "W18", "category": "X multiple posts", "url": "https://x.com/NASA" },
+    { "id": "W19", "category": "X thread", "url": "https://x.com/alexgroberman/status/1976676229387551145" },
+    { "id": "W20", "category": "editable input", "url": "https://www.google.com/" }
+  ],
+  "video": [
+    { "id": "V01", "candidate": "human CC / Chinese track", "url": "https://www.youtube.com/watch?v=eIho2S0ZahI" },
+    { "id": "V02", "candidate": "human CC / Chinese track", "url": "https://www.youtube.com/watch?v=8KkKuTCFvzI" },
+    { "id": "V03", "candidate": "human CC / Chinese track", "url": "https://www.youtube.com/watch?v=iG9CE55wbtY" },
+    { "id": "V04", "candidate": "human CC / Chinese track", "url": "https://www.youtube.com/watch?v=Ks-_Mh1QhMc" },
+    { "id": "V05", "candidate": "human CC / container fullscreen", "url": "https://www.youtube.com/watch?v=arj7oStGLkU" },
+    { "id": "V06", "candidate": "automatic English CC", "url": "https://www.youtube.com/watch?v=uNuhG3kS7so" },
+    { "id": "V07", "candidate": "automatic English CC / long video", "url": "https://www.youtube.com/watch?v=GjvgtwSOCao" },
+    { "id": "V08", "candidate": "English CC", "url": "https://www.youtube.com/watch?v=GvYYFloV0aA" },
+    { "id": "V09", "candidate": "possibly no CC", "url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ" },
+    { "id": "V10", "candidate": "English CC / short video", "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw" }
+  ]
+}
