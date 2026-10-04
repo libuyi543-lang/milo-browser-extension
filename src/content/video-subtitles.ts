@@ -14,12 +14,21 @@ import {
   InteractiveSubtitles,
   SubtitleWord
 } from './youtube-subtitles'
+import { SavedWords } from './saved-words'
 
 /** Wait this long for YouTube to load the English track before falling back. */
 const SOURCE_TIMEOUT = 8000
 
+interface LearningOptions {
+  /** Saved words to underline in Milo's subtitles. */
+  saved?: SavedWords
+  /** Blur the Chinese line until the pointer is on the subtitle. */
+  learning?: () => boolean
+}
+
 export function setupVideoSubtitles(
-  onWord: (word: SubtitleWord | null) => void = () => undefined
+  onWord: (word: SubtitleWord | null) => void = () => undefined,
+  learningOptions: LearningOptions = {}
 ) {
   let enabled = false
   let interval: number | undefined
@@ -268,6 +277,8 @@ export function setupVideoSubtitles(
         cues,
         videoId: sourceVideoId,
         onStatus: updateStatus,
+        saved: learningOptions.saved,
+        learning: learningOptions.learning,
         onWord: word => {
           wordShown = true
           onWord(word)

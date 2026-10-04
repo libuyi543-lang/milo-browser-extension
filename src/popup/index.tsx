@@ -1,7 +1,9 @@
 import { message } from '@/_helpers/browser-api'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
-import { MiloWord } from '@/models/MiloWord'
+import { MiloWord, timesMet, wordStatus } from '@/models/MiloWord'
+import { TranslationPreferences } from '@/models/TranslationPreferences'
+import { getPreferences, savePreferences } from '@/services/translation/general'
 import { listMiloWords } from '@/services/miloStorage'
 import { translateCurrentPage } from '@/services/aiSettings'
 import { AISettingsPanel } from './AISettingsPanel'
@@ -17,6 +19,7 @@ const App = () => {
   const [configured, setConfigured] = useState(false)
   const [aiTip, setAITip] = useState('')
   const [showPin, setShowPin] = useState(false)
+  const [prefs, setPrefs] = useState<TranslationPreferences | null>(null)
 
   useEffect(() => {
     let active = true
@@ -30,10 +33,30 @@ const App = () => {
       .finally(() => {
         if (active) setLoading(false)
       })
+    getPreferences()
+      .then(result => {
+        if (active) setPrefs(result)
+      })
+      .catch(() => undefined)
     return () => {
       active = false
     }
   }, [])
+
+  const toggle = async (
+    key: 'highlightWords' | 'learningMode',
+    value: boolean
+  ) => {
+    if (!prefs) return
+    setPrefs({ ...prefs, [key]: value })
+    try {
+      // Open pages pick the change up at once; no reload needed.
+      setPrefs(await savePreferences({ ...prefs, [key]: value }))
+    } catch (_) {
+      setPrefs(prefs)
+      setAITip('设置保存失败，请重试')
+    }
+  }
 
   return (
     <main className="milo-popup">
@@ -58,6 +81,32 @@ const App = () => {
         </p>
       )}
       <p className="milo-lead">阅读时遇见的词，都有来处。</p>
+      {prefs && (
+        <div className="milo-learning">
+          <label>
+            <input
+              type="checkbox"
+              checked={prefs.highlightWords}
+              onChange={e => toggle('highlightWords', e.target.checked)}
+            />
+            <span>
+              标出生词
+              <small>单词本里“学习中”的词在网页和字幕中高亮</small>
+            </span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={prefs.learningMode}
+              onChange={e => toggle('learningMode', e.target.checked)}
+            />
+            <span>
+              学习模式
+              <small>中文译文先模糊，鼠标移上去再显示</small>
+            </span>
+          </label>
+        </div>
+      )}
       <AISettingsPanel onConfigured={setConfigured} />
       <button
         className="milo-action"
@@ -119,7 +168,8 @@ const App = () => {
               <div className="milo-item-head">
                 <span className="milo-word">{word.word}</span>
                 <span className="milo-encounters">
-                  遇见 {word.encounterCount} 次
+                  {wordStatus(word) === 'known' ? '已掌握 · ' : ''}遇见{' '}
+                  {timesMet(word)} 次
                 </span>
               </div>
               <div className="milo-meaning">{word.meaning}</div>

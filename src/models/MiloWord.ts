@@ -1,5 +1,8 @@
 import { MiloEncounter } from './MiloEncounter'
 
+/** 学习中 words are highlighted wherever they appear; 已掌握 words are left alone. */
+export type MiloWordStatus = 'learning' | 'known'
+
 export interface MiloWord {
   id: string
   word: string
@@ -16,6 +19,19 @@ export interface MiloWord {
   createdAt: number
   encounterCount: number
   encounters: MiloEncounter[]
+  /** Missing on words saved before v0.7, which count as 学习中. */
+  status?: MiloWordStatus
+  /** Times the word turned up again on a page or in a video after it was saved. */
+  seenCount?: number
+  lastSeen?: { url: string; at: number }
+}
+
+/** What a content script needs to recognise saved words on the page. */
+export interface SavedWordEntry {
+  word: string
+  meaning: string
+  status: MiloWordStatus
+  times: number
 }
 
 export interface MiloWordInput {
@@ -90,4 +106,13 @@ export function addEncounter(
     encounterCount: existing.encounterCount + 1,
     encounters: existing.encounters.concat(encounter)
   }
+}
+
+export function wordStatus(word: MiloWord): MiloWordStatus {
+  return word.status === 'known' ? 'known' : 'learning'
+}
+
+/** Saves plus later sightings: how often the reader has met the word. */
+export function timesMet(word: MiloWord): number {
+  return word.encounterCount + (word.seenCount || 0)
 }

@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { message } from '@/_helpers/browser-api'
-import { listMiloWords } from '@/services/miloStorage'
-import { MiloWord } from '@/models/MiloWord'
+import { listMiloWords, setMiloWordStatus } from '@/services/miloStorage'
+import {
+  MiloWord,
+  MiloWordStatus,
+  timesMet,
+  wordStatus
+} from '@/models/MiloWord'
 import { download } from './documents'
 const cell = (value: any) => {
   let text = String(value || '')
@@ -13,6 +18,7 @@ export const Notebook = () => {
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('')
   const [deleted, setDeleted] = useState<MiloWord | null>(null)
+  const [filter, setFilter] = useState<'all' | MiloWordStatus>('all')
   const refresh = () =>
     listMiloWords()
       .then(setWords)
@@ -20,17 +26,39 @@ export const Notebook = () => {
   useEffect(() => {
     refresh()
   }, [])
-  const visible = words.filter(word =>
-    (word.word + ' ' + word.meaning + ' ' + word.sentence)
-      .toLowerCase()
-      .includes(query.toLowerCase())
+  const known = words.filter(word => wordStatus(word) === 'known').length
+  const visible = words.filter(
+    word =>
+      (filter === 'all' || wordStatus(word) === filter) &&
+      (word.word + ' ' + word.meaning + ' ' + word.sentence)
+        .toLowerCase()
+        .includes(query.toLowerCase())
   )
   return (
     <section>
       <h2>
         单词本 <small>{words.length} 个词</small>
       </h2>
-      <p>每个词保存阅读出处与遇见记录。备份不包含 API Key。</p>
+      <p>
+        学习中的词会在网页和字幕里标出，再次遇见会自动计数；标为已掌握后不再标出。备份不包含
+        API Key。
+      </p>
+      <div className="filters" role="group" aria-label="按状态筛选">
+        {([
+          ['all', `全部 ${words.length}`],
+          ['learning', `学习中 ${words.length - known}`],
+          ['known', `已掌握 ${known}`]
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            className={filter === value ? '' : 'secondary'}
+            aria-pressed={filter === value}
+            onClick={() => setFilter(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <input
         placeholder="搜索单词、释义或原句"
         value={query}
@@ -57,14 +85,15 @@ export const Notebook = () => {
                 [
                   '\uFEFF' +
                     [
-                      'word,meaning,sentence,url,encounterCount',
+                      'word,meaning,sentence,url,encounterCount,status',
                       ...words.map(word =>
                         [
                           word.word,
                           word.meaning,
                           word.sentence,
                           word.source.url,
-                          word.encounterCount
+                          timesMet(word),
+                          wordStatus(word)
                         ]
                           .map(cell)
                           .join(',')
@@ -131,7 +160,26 @@ export const Notebook = () => {
         <article className="word-row" key={word.id}>
           <div className="word-line">
             <h3>{word.word}</h3>
-            <span>遇见 {word.encounterCount} 次</span>
+            <span className="status-chip" data-status={wordStatus(word)}>
+              {wordStatus(word) === 'known' ? '已掌握' : '学习中'}
+            </span>
+            <span>遇见 {timesMet(word)} 次</span>
+            <button
+              className="link"
+              onClick={async () => {
+                try {
+                  await setMiloWordStatus(
+                    word.word,
+                    wordStatus(word) === 'known' ? 'learning' : 'known'
+                  )
+                  refresh()
+                } catch (error) {
+                  setStatus(error.message)
+                }
+              }}
+            >
+              {wordStatus(word) === 'known' ? '改回学习中' : '标为已掌握'}
+            </button>
             <button
               className="link"
               onClick={() => {

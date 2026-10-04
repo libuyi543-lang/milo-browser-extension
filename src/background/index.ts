@@ -19,10 +19,12 @@ import {
 } from './preferences'
 import { startDesktopActions } from './desktop-actions'
 import { startYouTubeCaptionsServer } from './youtube-captions'
+import { startStoreRelay } from './store-relay'
 
 // Keep the original extension message bridge, including PAGE_INFO and iframe routing.
 message.self.initServer()
 startMiloStorageServer()
+startStoreRelay()
 startDesktopActions()
 startYouTubeCaptionsServer()
 const sessions = new Map<

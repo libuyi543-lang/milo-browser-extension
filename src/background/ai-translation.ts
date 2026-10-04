@@ -1,5 +1,10 @@
 import { directTranslation, isDirectProvider } from './direct-translation'
 import { TranslationResult } from '@/services/translation/TranslationProvider'
+import {
+  MAX_PARAGRAPH_CHARS,
+  MAX_PARAGRAPH_ID,
+  MAX_PARAGRAPHS
+} from '@/services/translation/limits'
 import { TranslationCache } from './translation-cache'
 import {
   cancellationError,
@@ -503,18 +508,18 @@ export async function translateParagraphsWithAI(
   if (
     !Array.isArray(items) ||
     !items.length ||
-    items.length > 8 ||
+    items.length > MAX_PARAGRAPHS ||
     items.some(
       item =>
         !item ||
         typeof item.id !== 'string' ||
         !item.id ||
-        item.id.length > 120 ||
+        item.id.length > MAX_PARAGRAPH_ID ||
         typeof item.text !== 'string' ||
         !item.text.trim()
     ) ||
     new Set(items.map(item => item.id)).size !== items.length ||
-    items.reduce((sum, item) => sum + item.text.length, 0) > 6500
+    items.reduce((sum, item) => sum + item.text.length, 0) > MAX_PARAGRAPH_CHARS
   )
     throw new Error('翻译段落格式或长度无效')
   if (signal && signal.aborted) throw cancellationError()

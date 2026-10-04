@@ -120,6 +120,22 @@ export const Settings = () => {
           />{' '}
           在网页右侧显示 Milo 悬浮按钮（点击翻译 / 恢复正文）
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={prefs.highlightWords}
+            onChange={e => update({ highlightWords: e.target.checked })}
+          />{' '}
+          在网页和字幕中标出单词本里“学习中”的词
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={prefs.learningMode}
+            onChange={e => update({ learningMode: e.target.checked })}
+          />{' '}
+          学习模式：中文译文先模糊，鼠标移上去再显示
+        </label>
       </div>
       <label>
         自动翻译的网站域名（每行一个，* 代表全部网站）

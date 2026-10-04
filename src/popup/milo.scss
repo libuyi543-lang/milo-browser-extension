@@ -44,3 +44,8 @@ body { width: 360px; background: #fbfaf6; color: #27352d; font-family: -apple-sy
 .milo-cache-settings .milo-link { font-size:11px; }
 .milo-reading-actions { padding-bottom:18px; }
 .milo-key:focus-visible,button:focus-visible { outline:2px solid #739080; outline-offset:2px; }
+
+.milo-learning { display:grid; gap:8px; margin:12px 0; padding:10px 12px; border-radius:12px; background:#f1f5ec; }
+.milo-learning label { display:flex; gap:9px; align-items:flex-start; color:#344b3c; font-size:13px; font-weight:600; cursor:pointer; }
+.milo-learning input { margin:3px 0 0; accent-color:#5c7f6e; }
+.milo-learning small { display:block; color:#7a877d; font-size:11px; font-weight:400; }

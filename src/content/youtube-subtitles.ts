@@ -3,7 +3,9 @@ import {
   translateParagraphs,
   cancelPageTranslation
 } from '@/services/translation/paragraphs'
+import { MAX_PARAGRAPHS } from '@/services/translation/limits'
 import { Cue, cueAt, tokenize } from './timedtext'
+import { SavedWords } from './saved-words'
 
 /** A subtitle word the user wants to look up, with where it was heard. */
 export interface SubtitleWord {
@@ -28,11 +30,14 @@ interface Options {
   onStatus: (status: string) => void
   translate?: Translate
   cancel?: (sessionId: string) => void
+  saved?: Pick<SavedWords, 'match' | 'seen' | 'subscribe'>
+  learning?: () => boolean
 }
 
 /** Translate this many lines ahead of playback; the rest waits until it is near. */
 const LOOKAHEAD = 40
-const BATCH = 16
+/** One request may not carry more paragraphs than the background accepts. */
+const BATCH = MAX_PARAGRAPHS
 const DWELL = 450
 /** Space the word card needs below the subtitle (card height plus gaps). */
 const CARD_ROOM = 290
@@ -46,16 +51,18 @@ const STYLE = `
 .box[hidden]{display:none}
 .source{font-weight:500;overflow-wrap:anywhere}
 .w{padding:0 1px;border-radius:4px;cursor:pointer;transition:background-color .12s,color .12s}
-.w:hover,.w[data-active=true]{background:#f2d36b;color:#1b281e}
-.target{margin-top:2px;font-size:.8em;color:#d6e4d0;overflow-wrap:anywhere}
+.w.saved{box-shadow:inset 0 -.14em #e8c34f;color:#fff6d6}
+.w:hover,.w[data-active=true]{background:#f2d36b;color:#1b281e;box-shadow:none}
+.target{margin-top:2px;font-size:.8em;color:#d6e4d0;overflow-wrap:anywhere;transition:filter .18s ease-out}
+:host([data-learning]) .box:not(:hover) .target:not([data-pending=true]){filter:blur(.32em)}
 .target:empty{display:none}
 .target[data-pending=true]{opacity:.45}
-@media (prefers-reduced-motion:reduce){.box,.w{transition:none}}
+@media (prefers-reduced-motion:reduce){.box,.w,.target{transition:none}}
 @media print{.box{display:none}}
 `
 
 export function createInteractiveSubtitles(options: Options) {
-  const { video, cues, videoId, onWord, onStatus } = options
+  const { video, cues, videoId, onWord, onStatus, saved } = options
   const translate = options.translate || translateParagraphs
   const cancel =
     options.cancel ||
@@ -73,6 +80,8 @@ export function createInteractiveSubtitles(options: Options) {
   let cardOpen = false
   let pausedByUs = false
   let dwell: number | undefined
+  /** The looked-up word, kept marked when the line is repainted. */
+  let active: { cue: number; word: number } | null = null
 
   const host = document.createElement('div')
   host.className = 'milo-external'
@@ -173,7 +182,17 @@ export function createInteractiveSubtitles(options: Options) {
       const word = document.createElement('span')
       word.className = 'w'
       word.textContent = token.text
+      const entry = saved && saved.match(token.text)
+      if (entry && entry.status === 'learning') {
+        word.classList.add('saved')
+        word.title = `单词本 · ${entry.meaning}`
+        saved!.seen(entry.word)
+      }
       source.appendChild(word)
+    }
+    if (active && active.cue === current) {
+      const word = source.querySelectorAll<HTMLElement>('.w')[active.word]
+      if (word) word.dataset.active = 'true'
     }
     const pending = translation === undefined
     target.dataset.pending = String(pending)
@@ -232,6 +251,9 @@ export function createInteractiveSubtitles(options: Options) {
   const tick = () => {
     if (destroyed) return
     position()
+    const learning = !!options.learning && options.learning()
+    if (learning !== host.hasAttribute('data-learning'))
+      host.toggleAttribute('data-learning', learning)
     const index = cueAt(cues, time())
     if (index !== current) {
       current = index
@@ -249,6 +271,10 @@ export function createInteractiveSubtitles(options: Options) {
       .querySelectorAll<HTMLElement>('.w[data-active=true]')
       .forEach(node => delete node.dataset.active)
     element.dataset.active = 'true'
+    active = {
+      cue: current,
+      word: Array.from(source.querySelectorAll('.w')).indexOf(element)
+    }
     cardOpen = true
     const rect = element.getBoundingClientRect()
     const line = box.getBoundingClientRect()
@@ -303,6 +329,14 @@ export function createInteractiveSubtitles(options: Options) {
   ])
     host.addEventListener(type, event => event.stopPropagation())
 
+  // A word saved from the card is underlined at once.
+  const unsubscribe = saved
+    ? saved.subscribe(() => {
+        painted = ''
+        render()
+      })
+    : () => undefined
+
   onStatus(READY_STATUS)
   tick()
 
@@ -312,6 +346,7 @@ export function createInteractiveSubtitles(options: Options) {
     /** The word card closed: carry on playing unless the pointer is still on the subtitle. */
     cardClosed() {
       cardOpen = false
+      active = null
       source
         .querySelectorAll<HTMLElement>('.w[data-active=true]')
         .forEach(node => delete node.dataset.active)
@@ -319,6 +354,7 @@ export function createInteractiveSubtitles(options: Options) {
     },
     destroy() {
       destroyed = true
+      unsubscribe()
       clearDwell()
       if (session) cancel(session)
       session = ''

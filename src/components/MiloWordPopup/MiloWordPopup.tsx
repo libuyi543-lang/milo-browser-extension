@@ -8,7 +8,12 @@ import {
   cancelTranslation
 } from '@/services/translation'
 import { isExtensionContextValid } from '@/_helpers/extension-lifecycle'
-import { saveMiloWord } from '@/services/miloStorage'
+import {
+  findMiloWord,
+  saveMiloWord,
+  setMiloWordStatus
+} from '@/services/miloStorage'
+import { MiloWord, timesMet, wordStatus } from '@/models/MiloWord'
 import { popupPosition } from '@/content/floating-ui/position'
 
 export interface MiloSelection {
@@ -38,6 +43,8 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [retry, setRetry] = useState(0)
+  const [record, setRecord] = useState<MiloWord | null>(null)
+  const [statusBusy, setStatusBusy] = useState(false)
   const generation = useRef(0)
   const savingLock = useRef(false)
   const observer = useRef<CardObserver | null>(null)
@@ -87,6 +94,14 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
     setError('')
     setSaving(false)
     setSaved(false)
+    setRecord(null)
+    setStatusBusy(false)
+    if (selection && isExtensionContextValid())
+      findMiloWord(selection.word.text)
+        .then(found => {
+          if (!canceled) setRecord(found)
+        })
+        .catch(() => undefined)
     const timer = selection
       ? setTimeout(() => {
           pending = true
@@ -151,6 +166,27 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
               ×
             </button>
             <div className="milo-word">{selection.word.text}</div>
+            {record && (
+              <div className="milo-record">
+                <span className="milo-status" data-status={wordStatus(record)}>
+                  {wordStatus(record) === 'known' ? '已掌握' : '学习中'}
+                </span>
+                {record.word.toLowerCase() !==
+                  selection.word.text.toLowerCase() && (
+                  <span>{record.word} · </span>
+                )}
+                遇见 {timesMet(record)} 次
+                <button
+                  className="milo-status-toggle"
+                  disabled={statusBusy}
+                  onClick={onToggleStatus}
+                >
+                  {wordStatus(record) === 'known'
+                    ? '改回学习中'
+                    : '标记为已掌握'}
+                </button>
+              </div>
+            )}
             <div className="milo-pronunciation">
               <span>{translation && translation.phonetic}</span>
               <button
@@ -196,7 +232,13 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
               disabled={!translation || saving || saved}
               onClick={onSave}
             >
-              {saved ? '✓ 已加入 Milo' : saving ? '正在保存…' : '＋ 加入 Milo'}
+              {saved
+                ? '✓ 已加入 Milo'
+                : saving
+                ? '正在保存…'
+                : record
+                ? '＋ 记下这个例句'
+                : '＋ 加入 Milo'}
             </button>
             {error && !translation && (
               <button
@@ -219,7 +261,7 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
     setSaving(true)
     setError('')
     try {
-      await saveMiloWord({
+      const word = await saveMiloWord({
         word: selection.word.text,
         meaning: translation.meaning,
         phonetic: translation.phonetic,
@@ -228,7 +270,10 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
         title: selection.word.title,
         url: selection.word.url
       })
-      if (currentGeneration === generation.current) setSaved(true)
+      if (currentGeneration === generation.current) {
+        setSaved(true)
+        setRecord(word)
+      }
     } catch (_) {
       if (currentGeneration === generation.current) setError('保存失败，请重试')
     } finally {
@@ -236,6 +281,23 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
         savingLock.current = false
         setSaving(false)
       }
+    }
+  }
+
+  async function onToggleStatus() {
+    if (!record || statusBusy) return
+    const currentGeneration = generation.current
+    setStatusBusy(true)
+    try {
+      const updated = await setMiloWordStatus(
+        record.word,
+        wordStatus(record) === 'known' ? 'learning' : 'known'
+      )
+      if (currentGeneration === generation.current) setRecord(updated)
+    } catch (_) {
+      if (currentGeneration === generation.current) setError('修改失败，请重试')
+    } finally {
+      if (currentGeneration === generation.current) setStatusBusy(false)
     }
   }
 }

@@ -10,6 +10,10 @@ import {
   cancelPageTranslation
 } from '@/services/translation/paragraphs'
 import {
+  MAX_PARAGRAPH_CHARS,
+  MAX_PARAGRAPHS
+} from '@/services/translation/limits'
+import {
   insertTranslation,
   ReadingParagraph,
   splitParagraph
@@ -317,11 +321,12 @@ export class PageTranslation {
         let length = 0
         for (
           let index = this.cursor;
-          index < this.jobs.length && batch.length < 8;
+          index < this.jobs.length && batch.length < MAX_PARAGRAPHS;
           index += 1
         ) {
           const job = this.jobs[index]
-          if (length + job.text.length > 6000 && batch.length) break
+          if (length + job.text.length > MAX_PARAGRAPH_CHARS && batch.length)
+            break
           batch.push(job)
           length += job.text.length
         }
@@ -346,6 +351,9 @@ export class PageTranslation {
             if (inserted) {
               inserted.dataset.miloParagraph = String(index)
               inserted.lang = this.preferences.target
+              // Learning mode blurs these until hovered; the original stays readable.
+              if (this.preferences.display === 'bilingual')
+                inserted.dataset.miloBilingual = 'true'
               if (this.preferences.style === 'muted')
                 inserted.style.opacity = '0.65'
               if (this.preferences.style === 'boxed')

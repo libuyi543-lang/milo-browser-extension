@@ -29,6 +29,7 @@ export const LANGUAGES: readonly (readonly [string, string])[] = [
   )
 ]
 export type LanguageCode = string
+export const PREFERENCES_KEY = 'milo_translation_preferences_v1'
 export interface TranslationPreferences {
   source: 'auto' | LanguageCode
   target: LanguageCode
@@ -46,6 +47,10 @@ export interface TranslationPreferences {
   floatingHiddenSites: string[]
   /** Vertical position of the button as a fraction of the viewport height. */
   floatingTop: number
+  /** Underline saved 学习中 words on pages and in subtitles. */
+  highlightWords: boolean
+  /** Blur translations until hovered, so the reader tries the English first. */
+  learningMode: boolean
 }
 export const DEFAULT_PREFERENCES: TranslationPreferences = {
   source: 'auto',
@@ -61,7 +66,9 @@ export const DEFAULT_PREFERENCES: TranslationPreferences = {
   glossary: '',
   floatingButton: true,
   floatingHiddenSites: [],
-  floatingTop: 0.62
+  floatingTop: 0.62,
+  highlightWords: true,
+  learningMode: false
 }
 export function languageName(code: string): string {
   if (code === 'auto') return '自动识别原文语言'
@@ -134,7 +141,12 @@ export function parsePreferences(value: any): TranslationPreferences {
         ? value.floatingButton
         : defaults.floatingButton,
     floatingHiddenSites: sites(value.floatingHiddenSites),
-    floatingTop: clampTop(value.floatingTop)
+    floatingTop: clampTop(value.floatingTop),
+    highlightWords:
+      typeof value.highlightWords === 'boolean'
+        ? value.highlightWords
+        : defaults.highlightWords,
+    learningMode: value.learningMode === true
   }
 }
 

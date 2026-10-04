@@ -7,6 +7,7 @@ import {
   createInteractiveSubtitles,
   READY_STATUS
 } from '@/content/youtube-subtitles'
+import { MAX_PARAGRAPHS } from '@/services/translation/limits'
 
 const settle = async () => {
   for (let i = 0; i < 10; i++) await Promise.resolve()
@@ -194,5 +195,19 @@ describe('interactive YouTube subtitles', () => {
     layer = undefined
     expect(cancel).toHaveBeenCalledWith(expect.stringMatching(/^subtitle_/))
     expect(document.querySelector('[data-milo-interactive]')).toBeNull()
+  })
+
+  it('never asks for more paragraphs than the background accepts', async () => {
+    const many = Array.from({ length: 30 }, (_, index) => ({
+      start: index * 1000,
+      end: index * 1000 + 1000,
+      text: `Line number ${index}.`
+    }))
+    const { translate } = create({ cues: many })
+    for (let i = 0; i < 6; i++) await settle()
+    const sizes = translate.mock.calls.map(([items]: any[]) => items.length)
+    // The lookahead is longer than one request, so it must arrive in pieces.
+    expect(sizes.length).toBeGreaterThan(1)
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(MAX_PARAGRAPHS)
   })
 })

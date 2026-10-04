@@ -4,10 +4,17 @@ import {
   createMiloWord,
   MiloWord,
   MiloWordInput,
-  normalizeWord
+  MiloWordStatus,
+  normalizeWord,
+  SavedWordEntry,
+  timesMet,
+  wordStatus
 } from '@/models/MiloWord'
+import { baseCandidates } from '@/models/word-forms'
 
 const STORAGE_KEY = 'milo_words_v1'
+/** A reload or a re-render of the same page within this window is not a new sighting. */
+const SEEN_AGAIN_AFTER = 6 * 60 * 60 * 1000
 type WordMap = Record<string, MiloWord>
 
 let saveQueue: Promise<unknown> = Promise.resolve()
@@ -18,6 +25,92 @@ async function readWordMap(): Promise<WordMap> {
   return stored && typeof stored === 'object' && !Array.isArray(stored)
     ? stored
     : {}
+}
+
+function queue<T>(task: () => Promise<T>): Promise<T> {
+  const operation = saveQueue.then(task)
+  saveQueue = operation.then(
+    () => undefined,
+    () => undefined
+  )
+  return operation
+}
+
+const has = (words: WordMap, key: string) =>
+  Object.prototype.hasOwnProperty.call(words, key)
+
+export function setMiloWordStatusLocally(
+  word: string,
+  status: MiloWordStatus
+): Promise<MiloWord> {
+  return queue(async () => {
+    if (status !== 'learning' && status !== 'known') throw new Error('状态无效')
+    const words = await readWordMap()
+    const key = normalizeWord(word)
+    if (!has(words, key)) throw new Error('单词本里还没有这个词')
+    words[key] = { ...words[key], status }
+    await browser.storage.local.set({ [STORAGE_KEY]: words })
+    return words[key]
+  })
+}
+
+/** Count saved words that turned up again; the same page only counts once in a while. */
+export function markMiloWordsSeenLocally(
+  keys: readonly string[],
+  url: string
+): Promise<number> {
+  return queue(async () => {
+    const words = await readWordMap()
+    const now = Date.now()
+    let counted = 0
+    for (const key of Array.from(new Set(keys)).slice(0, 300)) {
+      if (typeof key !== 'string' || !has(words, key)) continue
+      const word = words[key]
+      if (
+        word.lastSeen &&
+        word.lastSeen.url === url &&
+        now - word.lastSeen.at < SEEN_AGAIN_AFTER
+      )
+        continue
+      // Seeing a word on the page where it was just saved is not meeting it again.
+      const last = word.encounters[word.encounters.length - 1]
+      if (
+        last &&
+        seenUrl(last.url) === url &&
+        now - last.createdAt < SEEN_AGAIN_AFTER
+      )
+        continue
+      words[key] = {
+        ...word,
+        seenCount: (word.seenCount || 0) + 1,
+        lastSeen: { url, at: now }
+      }
+      counted += 1
+    }
+    if (counted) await browser.storage.local.set({ [STORAGE_KEY]: words })
+    return counted
+  })
+}
+
+export async function miloWordIndexLocally(): Promise<SavedWordEntry[]> {
+  await saveQueue
+  const words = await readWordMap()
+  return Object.keys(words).map(key => ({
+    word: key,
+    meaning: words[key].meaning,
+    status: wordStatus(words[key]),
+    times: timesMet(words[key])
+  }))
+}
+
+/** The saved record for a looked-up word, also when it appears inflected ("studies"). */
+export async function findMiloWordLocally(
+  word: string
+): Promise<MiloWord | null> {
+  await saveQueue
+  const words = await readWordMap()
+  const key = baseCandidates(normalizeWord(word)).find(item => has(words, item))
+  return key ? words[key] : null
 }
 
 export function saveMiloWordLocally(input: MiloWordInput): Promise<MiloWord> {
@@ -128,7 +221,16 @@ export function importMiloWordsLocally(input: unknown): Promise<number> {
           url: encounter.url?.slice(0, 2000)
         }
       })
-      return { ...created, encounters, encounterCount: encounters.length }
+      return {
+        ...created,
+        encounters,
+        encounterCount: encounters.length,
+        status: item.status === 'known' ? ('known' as const) : undefined,
+        seenCount:
+          Number.isInteger(item.seenCount) && item.seenCount > 0
+            ? Math.min(item.seenCount, 1000000)
+            : undefined
+      }
     })
     const words = await readWordMap()
     for (const item of validated) {
@@ -168,7 +270,10 @@ export function importMiloWordsLocally(input: unknown): Promise<number> {
         words[item.normalizedWord] = {
           ...previous,
           encounters,
-          encounterCount: encounters.length
+          encounterCount: encounters.length,
+          status: previous.status || item.status,
+          seenCount:
+            Math.max(previous.seenCount || 0, item.seenCount || 0) || undefined
         }
       }
     }
@@ -185,6 +290,29 @@ export function importMiloWordsLocally(input: unknown): Promise<number> {
 export function startMiloStorageServer(): void {
   message.addListener('MILO_SAVE_WORD', msg => saveMiloWordLocally(msg.payload))
   message.addListener('MILO_LIST_WORDS', () => listMiloWordsLocally())
+  message.addListener('MILO_WORD_INDEX', () => miloWordIndexLocally())
+  message.addListener('MILO_FIND_WORD', msg =>
+    findMiloWordLocally(msg.payload.word)
+  )
+  message.addListener('MILO_WORD_STATUS', async msg => {
+    try {
+      return {
+        word: await setMiloWordStatusLocally(
+          msg.payload.word,
+          msg.payload.status
+        )
+      }
+    } catch (error) {
+      return { error: error.message }
+    }
+  })
+  message.addListener('MILO_WORDS_SEEN', (msg, sender) => {
+    // The page address comes from the sender, not from the page script.
+    const url = seenUrl(sender.url)
+    return url
+      ? markMiloWordsSeenLocally(msg.payload.words, url)
+      : Promise.resolve(0)
+  })
   message.addListener('MILO_NOTEBOOK_UPDATE', async (msg, sender) => {
     try {
       if (!sender.url || !sender.url.startsWith(browser.runtime.getURL('')))
@@ -196,4 +324,19 @@ export function startMiloStorageServer(): void {
       return { error: error.message }
     }
   })
+}
+
+/** One address per page or video: no hash, and for YouTube only the video id. */
+export function seenUrl(raw: string | undefined): string {
+  if (!raw || !/^https?:/.test(raw)) return ''
+  try {
+    const url = new URL(raw)
+    url.hash = ''
+    if (/(^|\.)youtube\.com$/.test(url.hostname) && url.pathname === '/watch')
+      return `https://www.youtube.com/watch?v=${url.searchParams.get('v') ||
+        ''}`
+    return url.href.slice(0, 2000)
+  } catch (_) {
+    return ''
+  }
 }

@@ -110,3 +110,41 @@
 
 .milo-pronunciation { display:flex; gap:10px; align-items:center; margin-top:7px; color:#839185; font-size:12px; }
 .milo-pronunciation button { border:0; background:none; color:#5c7f6e; font:inherit; padding:0; cursor:pointer; }
+
+.milo-record {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+  margin-top: 8px;
+  color: #7a877d;
+  font-size: 12px;
+}
+
+.milo-status {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #f6ebc4;
+  color: #7a5d0c;
+  font-weight: 600;
+}
+
+.milo-status[data-status='known'] {
+  background: #e3eee0;
+  color: #3e664b;
+}
+
+.milo-status-toggle {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #426951;
+  font: 600 12px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+}
+
+.milo-status-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

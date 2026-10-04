@@ -2,9 +2,9 @@ import {
   clampTop,
   FloatingButtonAction,
   parsePreferences,
+  PREFERENCES_KEY as KEY,
   TranslationPreferences
 } from '@/models/TranslationPreferences'
-const KEY = 'milo_translation_preferences_v1'
 export async function getPreferences(): Promise<TranslationPreferences> {
   const data = await browser.storage.local.get(KEY)
   return parsePreferences(data[KEY])

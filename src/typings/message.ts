@@ -1,6 +1,11 @@
 import { ImageTranslation, VisionProvider } from '@/models/MediaTranslation'
 import { Word, DBArea } from '@/_helpers/record-manager'
-import { MiloWord, MiloWordInput } from '@/models/MiloWord'
+import {
+  MiloWord,
+  MiloWordInput,
+  MiloWordStatus,
+  SavedWordEntry
+} from '@/models/MiloWord'
 import { DictID } from '@/app-config'
 import { DictSearchResult } from '@/components/dictionaries/helpers'
 import { OpenUrlOptions } from '@/_helpers/browser-api'
@@ -142,6 +147,26 @@ export type MessageConfig = MessageConfigType<{
 
   MILO_LIST_WORDS: {
     response: MiloWord[]
+  }
+  MILO_WORD_INDEX: {
+    response: SavedWordEntry[]
+  }
+  MILO_FIND_WORD: {
+    payload: { word: string }
+    response: MiloWord | null
+  }
+  MILO_WORD_STATUS: {
+    payload: { word: string; status: MiloWordStatus }
+    response: { word?: MiloWord; error?: string }
+  }
+  MILO_WORDS_SEEN: {
+    payload: { words: string[] }
+    response: number
+  }
+
+  /** Background → pages: a stored key the page follows was changed. */
+  MILO_STORE_CHANGED: {
+    payload: { key: string }
   }
 
   /* ------------------------------------------------ *\

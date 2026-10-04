@@ -17,6 +17,11 @@ import { setupAreaTranslation } from './area-translation'
 import { setupGoogleDocsExport } from './google-docs'
 import { setupFloatingButton } from './floating-button'
 import { newWord } from '@/_helpers/record-manager'
+import { createSavedWords } from './saved-words'
+import { setupWordHighlight } from './word-highlight'
+import { watchPreferences } from './preferences-watch'
+import { setLearningMode } from './page-style'
+import { siteMatches } from '@/models/TranslationPreferences'
 
 function isEnglishWord(value: string): boolean {
   return value.length <= 80 && /^[a-z][a-z'-]*$/i.test(value)
@@ -36,24 +41,39 @@ const App = () => {
 
   useEffect(() => {
     const hover = setupHoverTranslation()
-    const cleanupSubtitles = setupVideoSubtitles(word => {
-      setPhrase(null)
-      setInputSelection(null)
-      setSelection(
-        word
-          ? {
-              word: newWord({
-                text: word.word,
-                context: word.sentence,
-                title: word.title,
-                url: word.url
-              }),
-              x: word.x,
-              y: word.y
-            }
-          : null
+    const saved = createSavedWords()
+    const highlight = setupWordHighlight(saved)
+    let learning = false
+    const stopWatching = watchPreferences(preferences => {
+      const excluded = siteMatches(
+        window.location.hostname,
+        preferences.excludedSites
       )
+      learning = preferences.learningMode
+      setLearningMode(learning)
+      highlight.setEnabled(preferences.highlightWords && !excluded)
     })
+    const cleanupSubtitles = setupVideoSubtitles(
+      word => {
+        setPhrase(null)
+        setInputSelection(null)
+        setSelection(
+          word
+            ? {
+                word: newWord({
+                  text: word.word,
+                  context: word.sentence,
+                  title: word.title,
+                  url: word.url
+                }),
+                x: word.x,
+                y: word.y
+              }
+            : null
+        )
+      },
+      { saved, learning: () => learning }
+    )
     subtitles.current = cleanupSubtitles
     const cleanupArea = setupAreaTranslation()
     const cleanupGoogleDocs = setupGoogleDocsExport()
@@ -105,6 +125,10 @@ const App = () => {
       setInputSelection(null)
       setPhrase(null)
       hover.cleanup()
+      stopWatching()
+      highlight.cleanup()
+      setLearningMode(false)
+      saved.destroy()
       cleanupSubtitles()
       subtitles.current = null
       cleanupArea()
