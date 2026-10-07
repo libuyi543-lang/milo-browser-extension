@@ -57,9 +57,38 @@ function readingTime(text: string) {
   return 700 + 45 * text.length
 }
 
+/**
+ * YouTube writes non-speech sounds where they happen, which drops "[music]" or
+ * "(applause)" into the middle of a sentence and breaks the reading rhythm.
+ * A sound tag carries no meaning inside the sentence, so it moves to the front
+ * of the line and the spoken words close up behind it.
+ */
+const SOUND_WORDS =
+  'music|applause|laughter|laughs|laughing|sighs?|silence|inaudible|noise|cheering|cheers|coughs?|coughing|sneez\\w*|humming|whistling|音乐|掌声|笑声|静音|欢呼|咳嗽'
+const SOUND_TAG = new RegExp(`[\\[(]\\s*(?:${SOUND_WORDS})\\s*[\\])]`, 'gi')
+const MUSIC_NOTE = /[♪♫]+/g
+
+export function hoistSoundTags(text: string) {
+  const tags: string[] = []
+  const body = text
+    .replace(MUSIC_NOTE, ' ')
+    .replace(SOUND_TAG, match => {
+      // One shape for every tag: the doubled spellings then share a translation.
+      tags.push(`[${match.replace(/[[\]()]/g, '').trim()}]`)
+      return ' '
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+  // Lyrics keep their notes; only lines with speech gain a hoisted tag.
+  if (!tags.length) return body || text
+  const prefix = tags.join(' ')
+  return body ? `${prefix} ${body}` : prefix
+}
+
 const finish = (cues: Cue[]) => {
   const ready = cues
     .filter(cue => cue.text && isFinite(cue.start) && cue.end > cue.start)
+    .map(cue => ({ ...cue, text: hoistSoundTags(cue.text) }))
     .sort((a, b) => a.start - b.start)
     .slice(0, MAX_CUES)
   // Every track passes through here, manual ones included. A line has to stay

@@ -121,6 +121,51 @@ describe('YouTube timed text', () => {
     expect(cues[0].end).toBeLessThan(30000)
   })
 
+  it('moves a sound tag to the front of the line', () => {
+    const body = JSON.stringify({
+      events: [
+        { tStartMs: 0, dDurationMs: 60000, id: 1 },
+        {
+          tStartMs: 1000,
+          dDurationMs: 4000,
+          segs: [
+            {
+              utf8:
+                "I think that's going [music] to be a huge challenge people are underestimating."
+            }
+          ]
+        },
+        {
+          tStartMs: 6000,
+          dDurationMs: 2000,
+          segs: [{ utf8: 'And (applause) the crowd agreed, [Music] loudly.' }]
+        }
+      ]
+    })
+    expect(parseTimedText(body).map(cue => cue.text)).toEqual([
+      "[music] I think that's going to be a huge challenge people are underestimating.",
+      '[applause] [Music] And the crowd agreed, loudly.'
+    ])
+  })
+
+  it('leaves lyrics and ordinary brackets alone', () => {
+    const body = JSON.stringify({
+      events: [
+        { tStartMs: 0, dDurationMs: 60000, id: 1 },
+        { tStartMs: 0, dDurationMs: 3000, segs: [{ utf8: '♪ Ooh baby ♪' }] },
+        {
+          tStartMs: 4000,
+          dDurationMs: 3000,
+          segs: [{ utf8: 'The ratio [1] is defined above.' }]
+        }
+      ]
+    })
+    expect(parseTimedText(body).map(cue => cue.text)).toEqual([
+      'Ooh baby',
+      'The ratio [1] is defined above.'
+    ])
+  })
+
   it('parses srv3 and legacy XML, decoding entities', () => {
     expect(
       parseTimedText(

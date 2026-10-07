@@ -210,4 +210,32 @@ describe('interactive YouTube subtitles', () => {
     expect(sizes.length).toBeGreaterThan(1)
     expect(Math.max(...sizes)).toBeLessThanOrEqual(MAX_PARAGRAPHS)
   })
+
+  it('translates a repeated line once and reuses it everywhere', async () => {
+    // "[music]" recurs all through a video, sometimes many lines in a row.
+    const repeated = Array.from({ length: 12 }, (_, index) => ({
+      start: index * 1000,
+      end: index * 1000 + 1000,
+      text: '[music]'
+    }))
+    const { translate } = create({
+      cues: [
+        ...repeated,
+        { start: 12000, end: 14000, text: 'Then the talk begins.' }
+      ]
+    })
+    for (let i = 0; i < 8; i++) await settle()
+    const asked = translate.mock.calls.flatMap(([items]: any[]) =>
+      items.map((item: any) => item.text)
+    )
+    expect(asked.filter((text: string) => text === '[music]')).toHaveLength(1)
+    expect(new Set(asked).size).toBe(asked.length)
+    // Every recurring line is filled in from that single answer.
+    video.currentTime = 0.5
+    layer!.tick()
+    expect(shadow().querySelector('.target')!.textContent).toBe('译:[music]')
+    video.currentTime = 11.5
+    layer!.tick()
+    expect(shadow().querySelector('.target')!.textContent).toBe('译:[music]')
+  })
 })

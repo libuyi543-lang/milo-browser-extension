@@ -70,6 +70,8 @@ export function createInteractiveSubtitles(options: Options) {
       cancelPageTranslation(id).catch(() => undefined)
     })
   const translations = new Map<number, string>()
+  /** Translation per line text, so a repeated line is requested only once. */
+  const byText = new Map<string, string>()
   let current = -2
   let painted = ''
   let destroyed = false
@@ -203,6 +205,8 @@ export function createInteractiveSubtitles(options: Options) {
     if (busy || destroyed || !cues.length || Date.now() < failedUntil) return
     const from = Math.max(0, anchor() - 1)
     const batch: number[] = []
+    /** Indices sharing a queued line's text; one request answers them all. */
+    const shared = new Map<string, number[]>()
     let length = 0
     for (
       let index = from;
@@ -210,9 +214,22 @@ export function createInteractiveSubtitles(options: Options) {
       index++
     ) {
       if (translations.has(index)) continue
-      if (length + cues[index].text.length > 3000 && batch.length) break
+      const text = cues[index].text
+      const known = byText.get(text)
+      if (known !== undefined) {
+        // "[music]" and other repeated lines: reuse the answer, skip the request.
+        translations.set(index, known)
+        continue
+      }
+      const queued = shared.get(text)
+      if (queued) {
+        queued.push(index)
+        continue
+      }
+      if (length + text.length > 3000 && batch.length) break
       batch.push(index)
-      length += cues[index].text.length
+      shared.set(text, [index])
+      length += text.length
     }
     if (!batch.length) return
     busy = true
@@ -228,9 +245,13 @@ export function createInteractiveSubtitles(options: Options) {
       if (destroyed) return
       const byId = new Map(result.map(item => [item.id, item.text]))
       // A missing line stays blank instead of being requested again and again.
-      batch.forEach(index =>
-        translations.set(index, (byId.get(String(index)) || '').trim())
-      )
+      batch.forEach(index => {
+        const text = (byId.get(String(index)) || '').trim()
+        byText.set(cues[index].text, text)
+        const group = shared.get(cues[index].text)
+        if (group) group.forEach(item => translations.set(item, text))
+        else translations.set(index, text)
+      })
       if (failedUntil) onStatus(READY_STATUS)
       failedUntil = 0
       ok = true

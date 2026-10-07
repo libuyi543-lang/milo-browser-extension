@@ -25,11 +25,98 @@ export function isCaptionPlayer(video: HTMLVideoElement) {
     return !!video.closest('#movie_player,ytd-reel-video-renderer')
   return true
 }
+interface ControlRecord {
+  host: HTMLElement
+  button: HTMLButtonElement
+  status: HTMLElement
+  /** Shown above the control bar; the bar itself has no room for text. */
+  toast: HTMLElement | null
+  toastShell: HTMLElement | null
+  toastText: string
+  toastTimer: number | undefined
+}
+const FONT =
+  '-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif'
+const STYLE = `
+:host{color-scheme:light}
+*{box-sizing:border-box}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:12px/1.5 ${FONT}}
+button{display:inline-flex;align-items:center;gap:7px;border:1px solid #bacbb7;border-radius:999px;background:#fbfcf7;color:#3e664b;padding:6px 12px;font:600 12px/1.5 ${FONT};cursor:pointer;white-space:nowrap}
+button:hover{background:#eef4e6}
+button:focus-visible{outline:2px solid #83a878;outline-offset:3px}
+button[aria-pressed=true]{background:#426951;border-color:#426951;color:#fff}
+.mark{font:700 14px Georgia,serif;opacity:.85}
+.status{color:#737e6c;max-width:480px;overflow-wrap:anywhere}
+@media(prefers-color-scheme:dark){.status{color:#9cab99}}
+/* In YouTube's control bar the button becomes an icon of the same size and
+   weight as the ones beside it, and the label and status move out of the way. */
+:host([data-mode=bar]) .controls{display:block;width:48px;height:100%;font-size:0}
+:host([data-mode=bar]) .label{display:none}
+:host([data-mode=bar]) .status{display:none}
+:host([data-mode=bar]) button{width:48px;height:100%;justify-content:center;gap:0;border:0;border-radius:0;background:none;color:#fff;padding:0;opacity:.9}
+:host([data-mode=bar]) button:hover{background:rgba(255,255,255,.1);opacity:1}
+:host([data-mode=bar]) button:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+:host([data-mode=bar]) button[aria-pressed=true]{background:none;color:#fff;opacity:1}
+:host([data-mode=bar]) button[aria-pressed=true] .mark{box-shadow:inset 0 -.22em #e8c34f;color:#fff6d6}
+:host([data-mode=bar]) .mark{font:700 20px Georgia,serif;opacity:1;line-height:1}
+:host([data-fullscreen=true]) .status{display:none}
+`
+const TOAST_STYLE = `
+:host{all:initial}
+.toast{position:fixed;z-index:2147483646;max-width:min(560px,86vw);padding:6px 12px;border-radius:8px;background:rgba(16,24,19,.86);color:#e8f0e2;font:12px/1.5 ${FONT};pointer-events:none;overflow-wrap:anywhere;opacity:0;transition:opacity .2s ease-out}
+.toast[data-visible=true]{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+`
+/** Anything fixed inside a fullscreen element must live inside it to be seen. */
+function appendToOverlayLayer(element: HTMLElement) {
+  const layer = document.fullscreenElement || document.body
+  element.style.position = document.fullscreenElement ? 'absolute' : ''
+  layer.appendChild(element)
+}
+
+/** Keeps a status visible in the control bar, which has room for an icon only. */
+function placeToast(record: ControlRecord, player: HTMLVideoElement) {
+  const text = record.toastText
+  if (!text) {
+    if (record.toast) record.toast.dataset.visible = 'false'
+    return
+  }
+  if (!record.toast) {
+    const shell = document.createElement('div')
+    shell.className = 'milo-external'
+    shell.dataset.miloVideoToast = 'true'
+    const root = shell.attachShadow({ mode: 'open' })
+    const style = document.createElement('style')
+    style.textContent = TOAST_STYLE
+    const toast = document.createElement('div')
+    toast.className = 'toast'
+    toast.setAttribute('role', 'status')
+    toast.setAttribute('aria-live', 'polite')
+    root.append(style, toast)
+    appendToOverlayLayer(shell)
+    record.toast = toast
+    record.toastShell = shell
+  }
+  const toast = record.toast!
+  if (toast.textContent !== text) toast.textContent = text
+  const rect = player.getBoundingClientRect()
+  Object.assign(toast.style, {
+    left: `${Math.round(rect.left + 16)}px`,
+    bottom: `${Math.round(
+      Math.max(16, window.innerHeight - rect.bottom + 56)
+    )}px`,
+    display: rect.width ? 'block' : 'none'
+  })
+  toast.dataset.visible = 'true'
+  if (record.toastTimer !== undefined) clearTimeout(record.toastTimer)
+  record.toastTimer = window.setTimeout(() => {
+    record.toastTimer = undefined
+    if (record.toast) record.toast.dataset.visible = 'false'
+  }, 4000)
+}
+
 export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
-  const records = new Map<
-    HTMLVideoElement,
-    { host: HTMLElement; button: HTMLButtonElement; status: HTMLElement }
-  >()
+  const records = new Map<HTMLVideoElement, ControlRecord>()
   let state: VideoControlState = { enabled: false, video: null, status: '' }
   let timer: number | undefined
   let closed = false
@@ -43,6 +130,10 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
   const youtube = /(^|\.)(youtube\.com|youtube-nocookie\.com)$/.test(
     window.location.hostname
   )
+  const statusText = (on: boolean, video: HTMLVideoElement) =>
+    on && state.enabled && state.video === video
+      ? state.status
+      : 'Milo · 双语字幕'
   const paint = () =>
     records.forEach((record, video) => {
       const on = state.enabled && state.video === video
@@ -57,15 +148,23 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
         : youtube
         ? '开启英文 / 中文双语字幕，鼠标移到字幕上可暂停查词'
         : '开启 Milo 双语字幕'
-      const text = on ? state.status : 'Milo · 双语字幕'
+      const text = statusText(on, video)
       if (record.status.textContent !== text) record.status.textContent = text
+      if (record.host.dataset.mode === 'bar' && text !== record.toastText) {
+        record.toastText = text
+        placeToast(record, video)
+      }
     })
   const anchor = (video: HTMLVideoElement) => {
     const player = videoContainer(video)
     const below = player
       .closest('ytd-watch-flexy')
       ?.querySelector<HTMLElement>('#below')
-    return { player, below }
+    // Where YouTube keeps the CC button, next to the quality and info icons.
+    const bar = youtube
+      ? player.querySelector<HTMLElement>('.ytp-right-controls')
+      : null
+    return { player, below, bar }
   }
   const scan = () => {
     if (closed) return
@@ -98,6 +197,7 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
         const host = document.createElement('div')
         host.className = 'milo-external'
         host.dataset.miloVideoControls = 'true'
+        host.dataset.mode = 'below'
         Object.assign(host.style, {
           display: 'block',
           width: '100%',
@@ -107,7 +207,7 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
         })
         const root = host.attachShadow({ mode: 'open' })
         const style = document.createElement('style')
-        style.textContent = `:host{color-scheme:light}:host([data-fullscreen=true]) .status{display:none}*{box-sizing:border-box}.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button{display:inline-flex;align-items:center;gap:7px;border:1px solid #bacbb7;border-radius:999px;background:#fbfcf7;color:#3e664b;padding:6px 12px;font:600 12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;cursor:pointer;white-space:nowrap}button:hover{background:#eef4e6}button:focus-visible{outline:2px solid #83a878;outline-offset:3px}button[aria-pressed=true]{background:#426951;border-color:#426951;color:#fff}.mark{font:700 14px Georgia,serif;opacity:.85}.status{color:#737e6c;max-width:480px;overflow-wrap:anywhere}@media(prefers-color-scheme:dark){.status{color:#9cab99}}`
+        style.textContent = STYLE
         const row = document.createElement('div')
         row.className = 'controls'
         const button = document.createElement('button')
@@ -117,6 +217,7 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
         mark.textContent = 'M'
         mark.setAttribute('aria-hidden', 'true')
         const label = document.createElement('span')
+        label.className = 'label'
         label.textContent = '字幕翻译'
         button.append(mark, label)
         const status = document.createElement('span')
@@ -136,40 +237,87 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
           event.stopPropagation()
           if (event.isTrusted) toggle(video)
         })
-        record = { host, button, status }
+        record = {
+          host,
+          button,
+          status,
+          toast: null,
+          toastShell: null,
+          toastText: '',
+          toastTimer: undefined
+        }
         records.set(video, record)
       }
-      const { player, below } = anchor(video)
+      const { player, below, bar } = anchor(video)
       const fullscreen = document.fullscreenElement
       const inFullscreen =
         !!fullscreen &&
         fullscreen.contains(video) &&
         fullscreen.tagName !== 'VIDEO'
-      record.host.dataset.fullscreen = String(inFullscreen)
-      Object.assign(
-        record.host.style,
-        inFullscreen
-          ? {
-              position: 'absolute',
-              left: '16px',
-              bottom: '64px',
-              width: 'auto',
-              zIndex: '2147483647'
-            }
-          : { position: '', left: '', bottom: '', width: '100%', zIndex: '' }
-      )
-      if (inFullscreen) {
-        if (record.host.parentElement !== fullscreen)
-          fullscreen!.appendChild(record.host)
-      } else if (below) {
-        if (record.host.parentElement !== below) below.prepend(record.host)
-      } else if (
-        player.parentElement &&
-        (record.host.parentElement !== player.parentElement ||
-          player.nextElementSibling !== record.host)
-      ) {
-        player.insertAdjacentElement('afterend', record.host)
+      // YouTube's own control bar is where a subtitle switch belongs: it sits
+      // with the CC button, fades out with the rest of the chrome, and needs no
+      // room of its own on the page.
+      const inBar = !!bar && (!fullscreen || inFullscreen)
+      record.host.dataset.mode = inBar ? 'bar' : 'below'
+      record.host.dataset.fullscreen = String(!inBar && inFullscreen)
+      record.host.title = inBar
+        ? statusText(state.enabled && state.video === video, video)
+        : ''
+      if (inBar) {
+        Object.assign(record.host.style, {
+          display: 'inline-block',
+          width: '48px',
+          // Fill the bar, like the CC and settings buttons beside it.
+          height: '100%',
+          maxWidth: '',
+          margin: '0',
+          flex: '0 0 auto',
+          position: '',
+          left: '',
+          bottom: '',
+          zIndex: ''
+        })
+        if (record.host.parentElement !== bar)
+          bar!.insertBefore(record.host, bar!.firstElementChild)
+      } else {
+        Object.assign(
+          record.host.style,
+          inFullscreen
+            ? {
+                display: 'block',
+                position: 'absolute',
+                left: '16px',
+                bottom: '64px',
+                width: 'auto',
+                maxWidth: '',
+                margin: '0',
+                zIndex: '2147483647'
+              }
+            : {
+                display: 'block',
+                position: '',
+                left: '',
+                bottom: '',
+                width: '100%',
+                maxWidth: '100%',
+                margin: '8px 0',
+                zIndex: ''
+              }
+        )
+        if (inFullscreen) {
+          if (record.host.parentElement !== fullscreen)
+            fullscreen!.appendChild(record.host)
+        } else if (below) {
+          if (record.host.parentElement !== below) below.prepend(record.host)
+        } else if (
+          player.parentElement &&
+          (record.host.parentElement !== player.parentElement ||
+            player.nextElementSibling !== record.host)
+        ) {
+          player.insertAdjacentElement('afterend', record.host)
+        }
       }
+      placeToast(record, video)
     })
     paint()
   }
@@ -202,7 +350,11 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
       window.removeEventListener('resize', schedule)
       document.removeEventListener('fullscreenchange', schedule)
       if (timer !== undefined) clearTimeout(timer)
-      records.forEach(record => record.host.remove())
+      records.forEach(record => {
+        if (record.toastTimer !== undefined) clearTimeout(record.toastTimer)
+        record.host.remove()
+        record.toastShell?.remove()
+      })
       records.clear()
     }
   }
