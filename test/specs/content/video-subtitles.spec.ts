@@ -21,12 +21,28 @@ jest.mock('@/services/translation/cancel', () => ({
 }))
 import { message } from '@/_helpers/browser-api'
 import { translateText } from '@/services/translation/general'
-import { setupVideoSubtitles } from '@/content/video-subtitles'
+import { routeVideoId, setupVideoSubtitles } from '@/content/video-subtitles'
 import { supportsVideoControls, videoContainer } from '@/content/video-controls'
 
 const settle = async () => {
   for (let i = 0; i < 10; i++) await Promise.resolve()
 }
+
+describe('the video in the address bar', () => {
+  it('reads the id from a watch link, a short, or nothing at all', () => {
+    expect(routeVideoId('https://www.youtube.com/watch?v=alpha')).toBe('alpha')
+    expect(
+      routeVideoId('https://www.youtube.com/watch?v=beta&list=PL1&t=30s')
+    ).toBe('beta')
+    expect(routeVideoId('https://www.youtube.com/shorts/gamma')).toBe('gamma')
+    expect(
+      routeVideoId('https://www.youtube.com/live/delta?feature=share')
+    ).toBe('delta')
+    // A page without a video id must not be mistaken for anything else.
+    expect(routeVideoId('https://www.youtube.com/feed/subscriptions')).toBe('')
+    expect(routeVideoId('not a url')).toBe('')
+  })
+})
 describe('video subtitle lifecycle', () => {
   let cleanup: (() => void) | undefined
   let now = 0

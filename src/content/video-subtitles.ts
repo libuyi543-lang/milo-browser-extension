@@ -19,6 +19,24 @@ import { SavedWords } from './saved-words'
 /** Wait this long for YouTube to load the English track before falling back. */
 const SOURCE_TIMEOUT = 8000
 
+/**
+ * The video id in the address bar, or '' on pages that carry none.
+ * YouTube switches videos without reloading the page, and for a moment after
+ * the switch the player keeps reporting the previous video's id. That id still
+ * has captions cached under it, so it has to be checked against the URL before
+ * anything is drawn from it.
+ */
+export function routeVideoId(href: string): string {
+  try {
+    const url = new URL(href)
+    const named = /^\/(?:shorts|live|embed)\/([^/?#]+)/.exec(url.pathname)
+    if (named) return named[1]
+    return url.searchParams.get('v') || ''
+  } catch (_) {
+    return ''
+  }
+}
+
 interface LearningOptions {
   /** Saved words to underline in Milo's subtitles. */
   saved?: SavedWords
@@ -65,6 +83,12 @@ export function setupVideoSubtitles(
   let sourceRetryAt = 0
   let sourceSince = 0
   let sourceVideoId = ''
+  /**
+   * How many ticks the player has spent naming a video other than the one in
+   * the address bar. A switch settles in well under this; a player that never
+   * settles falls through to the native captions instead of waiting forever.
+   */
+  let sourceWaits = 0
   let fallbackNote = ''
   const captured = new Map<string, { text: string; asr: boolean }>()
   const period = youtube ? 100 : 200
@@ -100,6 +124,7 @@ export function setupVideoSubtitles(
     sourceRetryAt = 0
     sourceSince = 0
     sourceVideoId = ''
+    sourceWaits = 0
     fallbackNote = ''
     if (pending) cancelTranslation(pending).catch(() => undefined)
     pending = ''
@@ -235,6 +260,26 @@ export function setupVideoSubtitles(
       })
       if (!enabled || version !== generation) return
       if (result.ok) {
+        // The player can still name the previous video right after a switch,
+        // and its captions are still cached under that id. Wait for the player
+        // to catch up rather than drawing the old video's lines on the new one.
+        const current = routeVideoId(location.href)
+        if (current && result.videoId && result.videoId !== current) {
+          sourceWaits++
+          // This is a wait, not a failure, so it must not use up the retries.
+          sourceAttempts = Math.max(0, sourceAttempts - 1)
+          if (sourceWaits > 20) {
+            // The player never caught up. Trained subtitles beat stale ones.
+            sourceState = 'failed'
+            fallbackNote = '未读取到英文字幕'
+            return
+          }
+          sourceState = 'idle'
+          sourceRetryAt = Date.now() + 300
+          updateStatus('正在等待视频切换完成…')
+          return
+        }
+        sourceWaits = 0
         sourceState = 'waiting'
         sourceSince = Date.now()
         sourceVideoId = result.videoId || route()
@@ -272,6 +317,17 @@ export function setupVideoSubtitles(
       return true
     }
     if (sourceState !== 'waiting') return false
+    // Nothing is drawn unless it belongs to the video now in the address bar.
+    const current = routeVideoId(location.href)
+    if (current && sourceVideoId && sourceVideoId !== current) {
+      if (!captured.has(current)) {
+        sourceState = 'idle'
+        sourceRetryAt = Date.now() + 250
+        return true
+      }
+      sourceVideoId = current
+      sourceSince = Date.now()
+    }
     const raw = captured.get(sourceVideoId)
     const cues = raw ? parseTimedText(raw.text, raw.asr) : []
     if (cues.length) {
