@@ -46,8 +46,10 @@ describe('YouTube timed text', () => {
         { tStartMs: 5000, dDurationMs: 1500, segs: [{ utf8: ' \n ' }] }
       ]
     })
+    // The 300ms gap before the next line is short: the line is held across it
+    // rather than flickering off and back on.
     expect(parseTimedText(body)).toEqual([
-      { start: 1200, end: 3200, text: 'Resilience is a skill.' },
+      { start: 1200, end: 3500, text: 'Resilience is a skill.' },
       { start: 3500, end: 5000, text: '[Music]' }
     ])
   })
@@ -88,10 +90,35 @@ describe('YouTube timed text', () => {
         }
       ]
     })
+    // The last word lands at 3300ms, but the line stays up until the next one
+    // starts, so the viewer can finish reading it.
     expect(parseTimedText(body, true)).toEqual([
-      { start: 1000, end: 3300, text: 'so today we talk about' },
+      { start: 1000, end: 6000, text: 'so today we talk about' },
       { start: 6000, end: 7200, text: 'resilience' }
     ])
+  })
+
+  it('keeps the opening line on screen long enough to read', () => {
+    // One word at the very start: its own span is a fraction of a second, and
+    // the next line is far away. A short line still gets reading time.
+    const body = JSON.stringify({
+      events: [
+        { tStartMs: 0, dDurationMs: 60000, id: 1 },
+        {
+          tStartMs: 200,
+          dDurationMs: 400,
+          wWinId: 1,
+          segs: [{ utf8: 'Hello' }]
+        },
+        { tStartMs: 30000, dDurationMs: 2000, segs: [{ utf8: 'everyone' }] }
+      ]
+    })
+    const cues = parseTimedText(body, true)
+    expect(cues[0].start).toBe(200)
+    // 700ms plus 45ms per character, so a one-word line lasts about a second.
+    expect(cues[0].end).toBeGreaterThanOrEqual(200 + 900)
+    // A gap this long is a real silence, so the screen does clear before the next line.
+    expect(cues[0].end).toBeLessThan(30000)
   })
 
   it('parses srv3 and legacy XML, decoding entities', () => {

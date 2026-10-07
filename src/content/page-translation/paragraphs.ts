@@ -109,6 +109,31 @@ export function splitParagraph(text: string, limit = 2800): string[] {
   return chunks
 }
 
+const GENERIC_FAMILY = /(?:^|,)\s*(?:sans-serif|serif|system-ui|ui-sans-serif|ui-serif|monospace|-apple-system)\s*$/i
+/** Chinese needs its own faces; a heading's Latin stack alone falls back badly. */
+const CJK_FALLBACK =
+  '"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif'
+
+/**
+ * The translation is a caption for the paragraph, not a copy of it. A heading's
+ * own size would make the caption read like a second headline, so the size is
+ * pulled back to whatever the surrounding text actually uses.
+ */
+function captionSize(element: HTMLElement, inside: boolean) {
+  const own = parseFloat(getComputedStyle(element).fontSize) || 16
+  if (inside) return own
+  const parent = element.parentElement
+  const context = parent ? parseFloat(getComputedStyle(parent).fontSize) : 0
+  return context > 0 ? Math.min(own, context) : own
+}
+
+/** Keeps a heading's tight leading without letting it collapse on small text. */
+function captionLeading(style: CSSStyleDeclaration, size: number) {
+  const leading = parseFloat(style.lineHeight)
+  const ratio = isFinite(leading) && leading > 0 ? leading / size : 1.6
+  return String(Math.min(1.8, Math.max(1.4, ratio)))
+}
+
 export function insertTranslation(
   paragraph: ReadingParagraph,
   text: string
@@ -129,17 +154,34 @@ export function insertTranslation(
   translated.lang = 'zh-CN'
   translated.textContent = text
   const sourceStyle = getComputedStyle(element)
+  const parentDisplay = element.parentElement
+    ? getComputedStyle(element.parentElement).display
+    : ''
+  const inside =
+    /^(LI|TD|TH|DD|DT|BODY)$/.test(element.tagName) ||
+    /flex|grid/.test(parentDisplay)
+  const size = captionSize(element, inside)
+  const family = sourceStyle.fontFamily.replace(GENERIC_FAMILY, '').trim()
   Object.assign(translated.style, {
     display: 'block',
     color: sourceStyle.color,
-    fontFamily: sourceStyle.fontFamily,
-    fontSize: sourceStyle.fontSize,
+    fontFamily: `${family ? family + ',' : ''}${CJK_FALLBACK}`,
+    fontSize: `${size}px`,
     fontWeight: '400',
-    lineHeight: '1.7',
+    fontStyle: 'normal',
+    fontVariant: 'normal',
+    lineHeight: captionLeading(sourceStyle, size),
     textAlign: sourceStyle.textAlign,
+    // Indent and tracking belong to the source language's typography.
+    textIndent: '0',
+    letterSpacing: 'normal',
+    wordSpacing: 'normal',
+    textTransform: 'none',
+    textDecoration: 'none',
     whiteSpace: 'pre-wrap',
-    marginTop: '0.5em',
-    marginBottom: '0.8em',
+    overflowWrap: 'anywhere',
+    margin: inside ? '0.3em 0 0' : '0.35em 0 0',
+    padding: '0',
     opacity: '0.88',
     width: 'auto',
     height: 'auto',
@@ -147,14 +189,7 @@ export function insertTranslation(
     background: 'none',
     border: '0'
   })
-  const parentDisplay = element.parentElement
-    ? getComputedStyle(element.parentElement).display
-    : ''
-  if (
-    /^(LI|TD|TH|DD|DT|BODY)$/.test(element.tagName) ||
-    /flex|grid/.test(parentDisplay)
-  )
-    element.appendChild(translated)
+  if (inside) element.appendChild(translated)
   else element.insertAdjacentElement('afterend', translated)
   return translated
 }

@@ -53,7 +53,7 @@ const STYLE = `
 .w{padding:0 1px;border-radius:4px;cursor:pointer;transition:background-color .12s,color .12s}
 .w.saved{box-shadow:inset 0 -.14em #e8c34f;color:#fff6d6}
 .w:hover,.w[data-active=true]{background:#f2d36b;color:#1b281e;box-shadow:none}
-.target{margin-top:2px;font-size:.8em;color:#d6e4d0;overflow-wrap:anywhere;transition:filter .18s ease-out}
+.target{margin-top:2px;font-size:1em;color:#e6efe1;overflow-wrap:anywhere;transition:filter .18s ease-out}
 :host([data-learning]) .box:not(:hover) .target:not([data-pending=true]){filter:blur(.32em)}
 .target:empty{display:none}
 .target[data-pending=true]{opacity:.45}

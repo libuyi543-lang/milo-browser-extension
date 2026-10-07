@@ -174,7 +174,9 @@ export function setupVideoSubtitles(
     Object.assign(element.style, {
       left: `${rect.left + rect.width * 0.08}px`,
       top: `${rect.top + rect.height * 0.68}px`,
-      width: `${rect.width * 0.84}px`
+      width: `${rect.width * 0.84}px`,
+      // Match the interactive layer: both lines scale with the player together.
+      fontSize: `${Math.round(Math.min(30, Math.max(15, rect.width / 38)))}px`
     })
   }
   const makeOverlay = () => {
@@ -238,9 +240,11 @@ export function setupVideoSubtitles(
         sourceVideoId = result.videoId || route()
         // The player may have loaded the track before Milo was listening.
         window.postMessage({ milo: 'timedtext-replay' }, location.origin)
-      } else if (result.retryable && sourceAttempts < 3) {
+      } else if (result.retryable && sourceAttempts < 6) {
         sourceState = 'idle'
-        sourceRetryAt = Date.now() + 1200
+        // A video just opened: the player is not ready yet, and the first lines
+        // are the ones the viewer is trying to read. Poll sooner, more times.
+        sourceRetryAt = Date.now() + 350
         updateStatus('正在等待 YouTube 字幕加载…')
       } else {
         sourceState = 'failed'

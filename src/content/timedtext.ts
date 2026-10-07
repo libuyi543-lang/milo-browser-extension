@@ -18,6 +18,8 @@ export interface SubtitleToken {
 }
 
 const MAX_CUES = 5000
+/** Hold a line across a gap this long; a longer silence lets the screen clear. */
+const BRIDGE = 5000
 
 /** Reads the track identity from a YouTube /api/timedtext URL. */
 export function timedTextInfo(url: string): TimedTextInfo | null {
@@ -50,11 +52,29 @@ const clean = (text: string) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-const finish = (cues: Cue[]) =>
-  cues
+/** Reading time for a line: a short one still needs about a second. */
+function readingTime(text: string) {
+  return 700 + 45 * text.length
+}
+
+const finish = (cues: Cue[]) => {
+  const ready = cues
     .filter(cue => cue.text && isFinite(cue.start) && cue.end > cue.start)
     .sort((a, b) => a.start - b.start)
     .slice(0, MAX_CUES)
+  // Every track passes through here, manual ones included. A line has to stay
+  // up long enough to be read: the opening line of a video gets barely a second
+  // from its own word timings, because the speaker has hardly started, and the
+  // viewer sees it flash past. Give it reading time, and hold it across a short
+  // pause instead of blanking the screen between lines.
+  ready.forEach((cue, index) => {
+    cue.end = Math.max(cue.end, cue.start + readingTime(cue.text))
+    const next = ready[index + 1]
+    if (next && next.start - cue.end < BRIDGE)
+      cue.end = Math.max(cue.end, next.start)
+  })
+  return ready
+}
 
 interface Json3Event {
   tStartMs?: number
@@ -98,12 +118,7 @@ function speechLines(events: Json3Event[]): Cue[] {
     current.end = word.start + 1200
   }
   if (current) cues.push(current)
-  // Keep a line up until the next one when the gap is short, so it does not flicker.
-  cues.forEach((cue, index) => {
-    const next = cues[index + 1]
-    if (next && next.start - cue.end < 2000)
-      cue.end = Math.max(cue.end, next.start)
-  })
+  // Reading time and bridging are applied once in finish(), for every track.
   return cues
 }
 
