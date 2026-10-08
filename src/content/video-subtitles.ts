@@ -213,10 +213,12 @@ export function setupVideoSubtitles(
       zIndex: '2147483646',
       padding: '8px 15px',
       borderRadius: '8px',
-      // 淡蓝底压深字，半透明让画面透出来；文字自带一圈浅描边，压在亮画面上也读得清。
-      background: '#e6f0fcb8',
+      // 薄薄一层淡蓝 + 磨砂，画面透得过来；字靠描边立住，压在明暗画面上都读得清。
+      background: '#e6f0fc73',
       color: '#1f2a33',
-      textShadow: '0 1px 2px rgba(255,255,255,.85)',
+      textShadow: '0 1px 2px rgba(255,255,255,.9)',
+      backdropFilter: 'blur(7px)',
+      WebkitBackdropFilter: 'blur(7px)',
       font: '17px/1.6 -apple-system,sans-serif',
       textAlign: 'center',
       pointerEvents: 'none',

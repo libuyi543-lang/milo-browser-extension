@@ -46,8 +46,8 @@ export const READY_STATUS = '双语字幕已开启 · 鼠标移到字幕上暂�
 const STYLE = `
 :host{all:initial}
 *{box-sizing:border-box}
-.box{pointer-events:auto;display:inline-block;max-width:100%;padding:5px 14px 7px;border-radius:8px;background:rgba(230,240,252,.72);color:#1f2a33;text-shadow:0 1px 2px rgba(255,255,255,.85);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.42;text-align:center;transition:background-color .15s ease-out;cursor:default}
-.box:hover{background:rgba(242,248,255,.92)}
+.box{pointer-events:auto;display:inline-block;max-width:100%;padding:5px 14px 7px;border-radius:8px;background:rgba(230,240,252,.45);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);color:#1f2a33;text-shadow:0 1px 2px rgba(255,255,255,.9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.42;text-align:center;transition:background-color .15s ease-out;cursor:default}
+.box:hover{background:rgba(242,248,255,.88)}
 .box[hidden]{display:none}
 .source{font-weight:500;overflow-wrap:anywhere}
 .w{padding:0 1px;border-radius:4px;cursor:pointer;transition:background-color .12s,color .12s}
