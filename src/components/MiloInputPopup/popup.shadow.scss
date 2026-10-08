@@ -1,9 +1,9 @@
-.milo-input-card { position:fixed; z-index:2147483647; box-sizing:border-box; width:258px; max-width:calc(100vw - 24px); max-height:70vh; overflow:auto; padding:17px 18px 13px; border:1px solid #e8e7df; border-radius:14px; background:#fbfaf6; box-shadow:0 12px 35px #23312a24; color:#27352d; font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; text-align:left; }
-.milo-input-head { display:flex; align-items:center; justify-content:space-between; color:#5c7f6e; font-size:11px; }
-.milo-input-head button { border:0; background:none; padding:0 2px; color:#849087; font-size:20px; cursor:pointer; }
+.milo-input-card { position:fixed; z-index:2147483647; box-sizing:border-box; width:258px; max-width:calc(100vw - 24px); max-height:70vh; overflow:auto; padding:17px 18px 13px; border:1px solid #e2e9f2; border-radius:14px; background:#f8fbff; box-shadow:0 12px 35px #1f2f3d24; color:#1f2a33; font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; text-align:left; }
+.milo-input-head { display:flex; align-items:center; justify-content:space-between; color:#4a7fc4; font-size:11px; }
+.milo-input-head button { border:0; background:none; padding:0 2px; color:#8695a1; font-size:20px; cursor:pointer; }
 .milo-input-source { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin:9px 0 13px; white-space:pre-wrap; overflow-wrap:anywhere; }
-.milo-input-action { width:100%; border:0; border-radius:8px; background:#5c7f6e; color:#fff; padding:9px 12px; font:600 13px/1.5 -apple-system,sans-serif; cursor:pointer; }
+.milo-input-action { width:100%; border:0; border-radius:8px; background:#4a7fc4; color:#fff; padding:9px 12px; font:600 13px/1.5 -apple-system,sans-serif; cursor:pointer; }
 .milo-input-action:disabled { opacity:.6; cursor:default; }
-.milo-input-note { margin:9px 0 0; color:#849087; font-size:11px; }
+.milo-input-note { margin:9px 0 0; color:#8695a1; font-size:11px; }
 .milo-input-error { margin:9px 0 0; color:#a15c4e; font-size:12px; }
-.milo-input-action:focus-visible { outline:2px solid #739080; outline-offset:3px; }
+.milo-input-action:focus-visible { outline:2px solid #5f8fd0; outline-offset:3px; }

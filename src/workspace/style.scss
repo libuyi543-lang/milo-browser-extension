@@ -4,7 +4,7 @@
 body {
   margin: 0;
   background: #f6f7f0;
-  color: #293d30;
+  color: #22303c;
   font: 15px/1.7 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     sans-serif;
 }
@@ -17,8 +17,8 @@ textarea {
 button {
   border: 0;
   border-radius: 8px;
-  background: #5c7f6e;
-  color: #f8fbf5;
+  background: #4a7fc4;
+  color: #f7fbff;
   padding: 9px 17px;
   cursor: pointer;
 }
@@ -200,8 +200,8 @@ p {
   font-weight: 600;
 }
 .word-line .status-chip[data-status='known'] {
-  background: #e3eee0;
-  color: #3e664b;
+  background: #e3eefb;
+  color: #3f74c4;
 }
 .filters {
   display: flex;
@@ -314,10 +314,10 @@ p {
 
 /* Reading workspace: a quiet, compact editor with actions where they are used. */
 :root {
-  --milo-ink: #293d30;
-  --milo-subtle: #69756a;
-  --milo-line: #dfe4d9;
-  --milo-green: #426951;
+  --milo-ink: #22303c;
+  --milo-subtle: #64737f;
+  --milo-line: #dde5f0;
+  --milo-accent: #4a7fc4;
 }
 [hidden] {
   display: none !important;
@@ -373,10 +373,10 @@ p {
   color: #344f3a;
 }
 .navigation nav button[aria-current='page'] {
-  background: #e1e8d8;
-  color: #355b40;
+  background: #e3ecf9;
+  color: #33619f;
   font-weight: 600;
-  box-shadow: inset 3px 0 #5c7f6e;
+  box-shadow: inset 3px 0 #4a7fc4;
 }
 .navigation-footer {
   margin: auto 8px 0;
@@ -648,7 +648,7 @@ p {
   font-size: 11px;
 }
 .translate-button {
-  background: var(--milo-green);
+  background: var(--milo-accent);
   min-width: 102px;
   padding: 10px 17px;
   border-radius: 7px;

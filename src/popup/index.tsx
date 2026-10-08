@@ -1,7 +1,6 @@
 import { message } from '@/_helpers/browser-api'
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
-import { MiloWord, timesMet, wordStatus } from '@/models/MiloWord'
 import { TranslationPreferences } from '@/models/TranslationPreferences'
 import { getPreferences, savePreferences } from '@/services/translation/general'
 import { listMiloWords } from '@/services/miloStorage'
@@ -13,25 +12,20 @@ import './milo.scss'
 document.title = 'Milo'
 
 const App = () => {
-  const [words, setWords] = useState<readonly MiloWord[]>([])
-  const [loading, setLoading] = useState(true)
+  const [wordCount, setWordCount] = useState(0)
   const [error, setError] = useState('')
   const [configured, setConfigured] = useState(false)
   const [aiTip, setAITip] = useState('')
-  const [showPin, setShowPin] = useState(false)
   const [prefs, setPrefs] = useState<TranslationPreferences | null>(null)
 
   useEffect(() => {
     let active = true
     listMiloWords()
       .then(result => {
-        if (active) setWords(result)
+        if (active) setWordCount(result.length)
       })
       .catch(() => {
         if (active) setError('读取单词本失败')
-      })
-      .finally(() => {
-        if (active) setLoading(false)
       })
     getPreferences()
       .then(result => {
@@ -65,21 +59,8 @@ const App = () => {
           <img src="assets/icon-48.png" width="28" height="28" alt="" />
           Milo
         </h1>
-        <span className="milo-count">{words.length} 个词</span>
+        <span className="milo-count">{wordCount} 个词</span>
       </header>
-      <button
-        className="milo-pin-help milo-link"
-        aria-expanded={showPin}
-        onClick={() => setShowPin(!showPin)}
-      >
-        固定到浏览器工具栏
-      </button>
-      {showPin && (
-        <p className="milo-key-note">
-          点击 Chrome 右上角的拼图图标，找到 Milo，点击右侧图钉。之后可直接点
-          Milo 图标管理 API。
-        </p>
-      )}
       <p className="milo-lead">阅读时遇见的词，都有来处。</p>
       {prefs && (
         <div className="milo-learning">
@@ -157,33 +138,7 @@ const App = () => {
           </p>
         )}
       </div>
-      {error ? (
-        <div className="milo-empty">{error}</div>
-      ) : loading ? (
-        <div className="milo-empty">正在打开单词本…</div>
-      ) : words.length ? (
-        <div className="milo-list">
-          {words.slice(0, 12).map(word => (
-            <div className="milo-item" key={word.id}>
-              <div className="milo-item-head">
-                <span className="milo-word">{word.word}</span>
-                <span className="milo-encounters">
-                  {wordStatus(word) === 'known' ? '已掌握 · ' : ''}遇见{' '}
-                  {timesMet(word)} 次
-                </span>
-              </div>
-              <div className="milo-meaning">{word.meaning}</div>
-              {word.encounters[word.encounters.length - 1].sentence && (
-                <div className="milo-sentence">
-                  “{word.encounters[word.encounters.length - 1].sentence}”
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="milo-empty">去网页划选一个英文单词，开始收藏。</div>
-      )}
+      {error && <div className="milo-empty">{error}</div>}
       <footer className="milo-foot">Milo Browser Extension · 本地保存</footer>
     </main>
   )

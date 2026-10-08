@@ -4,6 +4,7 @@ import { SALADICT_PANEL } from '@/_helpers/saladict'
 import { LANGUAGES, LanguageCode } from '@/models/TranslationPreferences'
 import { getPreferences, translateText } from '@/services/translation/general'
 import { cancelTranslation } from '@/services/translation/cancel'
+import { speak } from '@/services/translation/speech'
 import { popupPosition } from '@/content/floating-ui/position'
 export interface TextSelection {
   text: string
@@ -113,14 +114,7 @@ export const MiloTextPopup: FC<{
             <button
               className="milo-save"
               disabled={!text}
-              onClick={() => {
-                if (window.speechSynthesis) {
-                  const utterance = new SpeechSynthesisUtterance(text)
-                  utterance.lang = target
-                  window.speechSynthesis.cancel()
-                  window.speechSynthesis.speak(utterance)
-                }
-              }}
+              onClick={() => speak(text, target)}
             >
               朗读译文
             </button>

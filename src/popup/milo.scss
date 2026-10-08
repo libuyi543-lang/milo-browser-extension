@@ -1,51 +1,44 @@
 html, body, #root { margin: 0; min-height: 100%; }
-body { width: 360px; background: #fbfaf6; color: #27352d; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+body { width: 360px; background: #f8fbff; color: #1f2a33; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 * { box-sizing: border-box; }
 .milo-popup { padding: 24px 22px 20px; }
 .milo-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.milo-logo { display:flex; align-items:center; gap:9px; margin: 0; color: #416a54; font: 700 25px Georgia, 'Times New Roman', serif; letter-spacing: -.03em; }
+.milo-logo { display:flex; align-items:center; gap:9px; margin: 0; color: #4a7fc4; font: 700 25px Georgia, 'Times New Roman', serif; letter-spacing: -.03em; }
 .milo-logo img { border-radius:7px; }
-.milo-count { color: #779080; font-size: 12px; }
-.milo-lead { margin: 12px 0 21px; color: #65746a; font-size: 13px; line-height: 1.6; }
-.milo-list { display: grid; gap: 0; border-top: 1px solid #e5e8df; }
-.milo-item { padding: 14px 0; border-bottom: 1px solid #e5e8df; }
-.milo-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.milo-word { color: #27352d; font: 600 18px Georgia, 'Times New Roman', serif; }
-.milo-encounters { flex: none; color: #5c7f6e; font-size: 11px; }
-.milo-meaning { margin-top: 5px; color: #425347; font-size: 13px; line-height: 1.5; }
-.milo-sentence { margin-top: 7px; color: #829087; font: italic 12px/1.5 Georgia, 'Times New Roman', serif; }
-.milo-empty { padding: 28px 0 12px; color: #829087; font-size: 13px; line-height: 1.6; }
-.milo-foot { margin-top: 20px; color: #94a197; font-size: 11px; }
-.milo-ai { padding: 15px 0 18px; border-top: 1px solid #e5e8df; }
-.milo-ai-heading { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#5c7f6e; margin-bottom:10px; }
-.milo-link { border:0; padding:3px 0 3px 8px; background:none; font:inherit; color:#5c7f6e; cursor:pointer; }
-.milo-key-label { display:block; font-size:12px; margin:8px 0; color:#65746a; }
-.milo-key { width:100%; padding:9px 10px; border:1px solid #d7dfd6; border-radius:8px; background:#fff; font-size:13px; color:#27352d; }
-.milo-action { width:100%; border:0; border-radius:8px; padding:10px; margin-top:10px; background:#5c7f6e; color:#fff; font-size:13px; cursor:pointer; }
+.milo-count { color: #6b89a8; font-size: 12px; }
+.milo-lead { margin: 12px 0 21px; color: #60707e; font-size: 13px; line-height: 1.6; }
+.milo-empty { padding: 20px 0 8px; color: #7d8d99; font-size: 13px; line-height: 1.6; }
+.milo-foot { margin-top: 20px; color: #8f9daa; font-size: 11px; }
+.milo-ai { padding: 15px 0 18px; border-top: 1px solid #e2e8f1; }
+.milo-ai-heading { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#4a7fc4; margin-bottom:10px; }
+.milo-link { border:0; padding:0; background:none; font:inherit; color:#4a7fc4; cursor:pointer; text-align:left; }
+.milo-link:hover { text-decoration:underline; }
+.milo-key-label { display:block; font-size:12px; margin:8px 0; color:#60707e; }
+.milo-key { width:100%; padding:9px 10px; border:1px solid #d9e3f2; border-radius:8px; background:#fff; font-size:13px; color:#1f2a33; }
+.milo-action { width:100%; border:0; border-radius:8px; padding:10px; margin-top:10px; background:#4a7fc4; color:#fff; font-size:13px; cursor:pointer; }
 .milo-action:disabled { opacity:.45; cursor:default; }
-.milo-key-note { margin:9px 0 0; font-size:11px; line-height:1.65; color:#829087; }
-.milo-ai-tip { color:#5c7f6e; font-size:12px; }
+.milo-key-note { margin:9px 0 0; font-size:11px; line-height:1.65; color:#7d8d99; }
+.milo-ai-tip { color:#4a7fc4; font-size:12px; }
 .milo-ai-error { color:#a15c4e; }
-.milo-pin-help { margin-top:10px; padding-left:0; font-size:11px; }
 .milo-provider-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:12px 0 15px; }
-.milo-provider { padding:10px 12px; border:1px solid #dce3d8; border-radius:9px; background:#f7f7f0; color:#4a6050; font-family:inherit; font-size:13px; font-weight:500; line-height:1.5; text-align:left; cursor:pointer; }
-.milo-provider span { display:block; font:11px/1.6 -apple-system,sans-serif; color:#8b9889; margin-top:2px; }
-.milo-provider[aria-pressed=true] { border-color:#6e8d77; background:#e9efe3; }
-.milo-provider[aria-pressed=true] span { color:#58725e; }
+.milo-provider { padding:10px 12px; border:1px solid #dbe6f5; border-radius:9px; background:#f5f8fd; color:#3a6db0; font-family:inherit; font-size:13px; font-weight:500; line-height:1.5; text-align:left; cursor:pointer; }
+.milo-provider span { display:block; font:11px/1.6 -apple-system,sans-serif; color:#8795a1; margin-top:2px; }
+.milo-provider[aria-pressed=true] { border-color:#6e8d77; background:#e8f1fc; }
+.milo-provider[aria-pressed=true] span { color:#3f74c4; }
 .milo-provider:disabled { cursor:default; opacity:.7; }
 .milo-setting-actions { display:flex; gap:8px; align-items:stretch; margin-top:12px; }
 .milo-setting-actions .milo-action { margin:0; flex:1; width:auto; }
-.milo-secondary { flex:1; border:1px solid #cad6c8; border-radius:8px; background:transparent; color:#5c7f6e; padding:10px; font-size:13px; cursor:pointer; }
+.milo-secondary { flex:1; border:1px solid #cbd9ec; border-radius:8px; background:transparent; color:#4a7fc4; padding:10px; font-size:13px; cursor:pointer; }
 .milo-secondary:disabled { opacity:.45; cursor:default; }
-.milo-key-note a { color:#5c7f6e; margin-left:4px; }
+.milo-key-note a { color:#4a7fc4; margin-left:4px; }
 .milo-remove-key { padding-left:0; margin-top:6px; font-size:11px; color:#9b7060; }
 .milo-cache-settings { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; }
 .milo-cache-settings .milo-key-note { margin:0; }
 .milo-cache-settings .milo-link { font-size:11px; }
-.milo-reading-actions { padding-bottom:18px; }
-.milo-key:focus-visible,button:focus-visible { outline:2px solid #739080; outline-offset:2px; }
+.milo-reading-actions { margin-top:12px; padding-bottom:18px; }
+.milo-key:focus-visible,button:focus-visible { outline:2px solid #5f8fd0; outline-offset:2px; }
 
-.milo-learning { display:grid; gap:8px; margin:12px 0; padding:10px 12px; border-radius:12px; background:#f1f5ec; }
-.milo-learning label { display:flex; gap:9px; align-items:flex-start; color:#344b3c; font-size:13px; font-weight:600; cursor:pointer; }
-.milo-learning input { margin:3px 0 0; accent-color:#5c7f6e; }
-.milo-learning small { display:block; color:#7a877d; font-size:11px; font-weight:400; }
+.milo-learning { display:grid; gap:8px; margin:12px 0; padding:10px 12px; border-radius:12px; background:#eef5fd; }
+.milo-learning label { display:flex; gap:9px; align-items:flex-start; color:#2c3a46; font-size:13px; font-weight:600; cursor:pointer; }
+.milo-learning input { margin:3px 0 0; accent-color:#4a7fc4; }
+.milo-learning small { display:block; color:#75858f; font-size:11px; font-weight:400; }

@@ -154,8 +154,8 @@ const App = () => {
           bottom: '18px',
           zIndex: '2147483647',
           padding: '10px 14px',
-          background: '#fbfaf6',
-          color: '#344b3c',
+          background: '#f8fbff',
+          color: '#2c3a46',
           borderRadius: '12px',
           boxShadow: '0 4px 20px #0002',
           font: '13px/1.6 -apple-system, sans-serif'

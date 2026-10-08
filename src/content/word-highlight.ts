@@ -17,9 +17,9 @@ export const HIGHLIGHT_STYLE = `
 
 const TIP_STYLE = `
 :host{all:initial}
-.tip{max-width:280px;padding:6px 10px 7px;border-radius:9px;background:#2f4636;color:#fff;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 4px 16px rgba(30,45,35,.22);animation:in .12s ease-out}
+.tip{max-width:280px;padding:6px 10px 7px;border-radius:9px;background:#22303c;color:#fff;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 4px 16px rgba(31,42,51,.22);animation:in .12s ease-out}
 .word{font-weight:600;margin-right:6px}
-.meta{display:block;margin-top:1px;color:#c9d8c4;font-size:11px}
+.meta{display:block;margin-top:1px;color:#c3d3e4;font-size:11px}
 @keyframes in{from{opacity:0;transform:translateY(-2px)}}
 @media (prefers-reduced-motion:reduce){.tip{animation:none}}
 `

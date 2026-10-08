@@ -213,8 +213,9 @@ export function setupVideoSubtitles(
       zIndex: '2147483646',
       padding: '8px 15px',
       borderRadius: '8px',
-      background: '#16231bdd',
-      color: '#fafcf6',
+      // 与产品 icon 同调：淡蓝底 + 深字，压在画面上仍然清楚。
+      background: '#e6f0fcf2',
+      color: '#1f2a33',
       font: '17px/1.6 -apple-system,sans-serif',
       textAlign: 'center',
       pointerEvents: 'none',

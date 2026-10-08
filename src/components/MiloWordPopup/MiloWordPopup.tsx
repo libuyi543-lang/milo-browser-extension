@@ -5,7 +5,8 @@ import { Word } from '@/_helpers/record-manager'
 import {
   translateWord,
   TranslationResult,
-  cancelTranslation
+  cancelTranslation,
+  speak
 } from '@/services/translation'
 import { isExtensionContextValid } from '@/_helpers/extension-lifecycle'
 import {
@@ -189,18 +190,7 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
             )}
             <div className="milo-pronunciation">
               <span>{translation && translation.phonetic}</span>
-              <button
-                onClick={() => {
-                  if (!window.speechSynthesis) return
-                  const utterance = new SpeechSynthesisUtterance(
-                    selection.word.text
-                  )
-                  utterance.lang = 'en-US'
-                  utterance.rate = 0.9
-                  window.speechSynthesis.cancel()
-                  window.speechSynthesis.speak(utterance)
-                }}
-              >
+              <button onClick={() => speak(selection.word.text, 'en-US')}>
                 朗读
               </button>
             </div>
@@ -226,6 +216,13 @@ export const MiloWordPopup: FC<MiloWordPopupProps> = ({
             )}
             {selection.word.context && (
               <p className="milo-sentence">“{selection.word.context}”</p>
+            )}
+            {translation && translation.examples && (
+              <ul className="milo-examples">
+                {translation.examples.slice(0, 3).map(example => (
+                  <li key={example}>{example}</li>
+                ))}
+              </ul>
             )}
             <button
               className="milo-save"

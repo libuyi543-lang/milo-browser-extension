@@ -41,13 +41,13 @@ const STYLE = `
 :host{color-scheme:light}
 *{box-sizing:border-box}
 .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:12px/1.5 ${FONT}}
-button{display:inline-flex;align-items:center;gap:7px;border:1px solid #bacbb7;border-radius:999px;background:#fbfcf7;color:#3e664b;padding:6px 12px;font:600 12px/1.5 ${FONT};cursor:pointer;white-space:nowrap}
-button:hover{background:#eef4e6}
-button:focus-visible{outline:2px solid #83a878;outline-offset:3px}
-button[aria-pressed=true]{background:#426951;border-color:#426951;color:#fff}
+button{display:inline-flex;align-items:center;gap:7px;border:1px solid #bcd0ea;border-radius:999px;background:#f7faff;color:#3f74c4;padding:6px 12px;font:600 12px/1.5 ${FONT};cursor:pointer;white-space:nowrap}
+button:hover{background:#eef5fd}
+button:focus-visible{outline:2px solid #7fa9dd;outline-offset:3px}
+button[aria-pressed=true]{background:#4a7fc4;border-color:#4a7fc4;color:#fff}
 .mark{font:700 14px Georgia,serif;opacity:.85}
-.status{color:#737e6c;max-width:480px;overflow-wrap:anywhere}
-@media(prefers-color-scheme:dark){.status{color:#9cab99}}
+.status{color:#6d7c88;max-width:480px;overflow-wrap:anywhere}
+@media(prefers-color-scheme:dark){.status{color:#9db1c7}}
 /* In YouTube's control bar the button becomes an icon of the same size and
    weight as the ones beside it, and the label and status move out of the way. */
 :host([data-mode=bar]) .controls{display:block;width:48px;height:100%;font-size:0}
@@ -63,7 +63,7 @@ button[aria-pressed=true]{background:#426951;border-color:#426951;color:#fff}
 `
 const TOAST_STYLE = `
 :host{all:initial}
-.toast{position:fixed;z-index:2147483646;max-width:min(560px,86vw);padding:6px 12px;border-radius:8px;background:rgba(16,24,19,.86);color:#e8f0e2;font:12px/1.5 ${FONT};pointer-events:none;overflow-wrap:anywhere;opacity:0;transition:opacity .2s ease-out}
+.toast{position:fixed;z-index:2147483646;max-width:min(560px,86vw);padding:6px 12px;border-radius:8px;background:#1f2a33e0;color:#eff5fc;font:12px/1.5 ${FONT};pointer-events:none;overflow-wrap:anywhere;opacity:0;transition:opacity .2s ease-out}
 .toast[data-visible=true]{opacity:1}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 `
@@ -74,13 +74,32 @@ function appendToOverlayLayer(element: HTMLElement) {
   layer.appendChild(element)
 }
 
-/** Keeps a status visible in the control bar, which has room for an icon only. */
-function placeToast(record: ControlRecord, player: HTMLVideoElement) {
-  const text = record.toastText
-  if (!text) {
-    if (record.toast) record.toast.dataset.visible = 'false'
+/** How long a status message stays on screen before it gets out of the way. */
+const TOAST_MS = 5000
+
+/** Puts the message where it belongs. It never touches the timer. */
+function positionToast(record: ControlRecord, player: HTMLVideoElement) {
+  if (!record.toast) return
+  if (!record.toastText) {
+    record.toast.dataset.visible = 'false'
     return
   }
+  const rect = player.getBoundingClientRect()
+  Object.assign(record.toast.style, {
+    left: `${Math.round(rect.left + 16)}px`,
+    bottom: `${Math.round(
+      Math.max(16, window.innerHeight - rect.bottom + 56)
+    )}px`,
+    display: rect.width ? 'block' : 'none'
+  })
+}
+
+/**
+ * A new status arrived. Show it once and let it expire on its own — positioning
+ * runs on every scan, so restarting the countdown there would keep the message
+ * on screen forever.
+ */
+function showToast(record: ControlRecord, player: HTMLVideoElement) {
   if (!record.toast) {
     const shell = document.createElement('div')
     shell.className = 'milo-external'
@@ -97,22 +116,17 @@ function placeToast(record: ControlRecord, player: HTMLVideoElement) {
     record.toast = toast
     record.toastShell = shell
   }
+  const text = record.toastText
   const toast = record.toast!
   if (toast.textContent !== text) toast.textContent = text
-  const rect = player.getBoundingClientRect()
-  Object.assign(toast.style, {
-    left: `${Math.round(rect.left + 16)}px`,
-    bottom: `${Math.round(
-      Math.max(16, window.innerHeight - rect.bottom + 56)
-    )}px`,
-    display: rect.width ? 'block' : 'none'
-  })
+  positionToast(record, player)
+  if (!text) return
   toast.dataset.visible = 'true'
   if (record.toastTimer !== undefined) clearTimeout(record.toastTimer)
   record.toastTimer = window.setTimeout(() => {
     record.toastTimer = undefined
     if (record.toast) record.toast.dataset.visible = 'false'
-  }, 4000)
+  }, TOAST_MS)
 }
 
 export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
@@ -152,7 +166,7 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
       if (record.status.textContent !== text) record.status.textContent = text
       if (record.host.dataset.mode === 'bar' && text !== record.toastText) {
         record.toastText = text
-        placeToast(record, video)
+        showToast(record, video)
       }
     })
   const anchor = (video: HTMLVideoElement) => {
@@ -317,7 +331,7 @@ export function setupVideoControls(toggle: (video: HTMLVideoElement) => void) {
           player.insertAdjacentElement('afterend', record.host)
         }
       }
-      placeToast(record, video)
+      positionToast(record, video)
     })
     paint()
   }

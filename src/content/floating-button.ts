@@ -13,23 +13,23 @@ const STYLE = `
 :host{all:initial;color-scheme:light}
 *{box-sizing:border-box}
 .dock{position:relative;display:flex;align-items:center;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.main{position:relative;width:46px;height:40px;padding:0 8px 0 0;border:1px solid #cddbc8;border-right:0;border-radius:20px 0 0 20px;background:#fbfcf7;color:#3e664b;box-shadow:0 3px 14px rgba(40,60,45,.16);cursor:pointer;display:flex;align-items:center;justify-content:center;transform:translateX(8px);opacity:.85;transition:transform .2s ease-out,opacity .2s ease-out,background-color .2s,color .2s;touch-action:none;user-select:none}
+.main{position:relative;width:46px;height:40px;padding:0 8px 0 0;border:1px solid #c8d9ee;border-right:0;border-radius:20px 0 0 20px;background:#f7faff;color:#3f74c4;box-shadow:0 3px 14px rgba(31,42,51,.16);cursor:pointer;display:flex;align-items:center;justify-content:center;transform:translateX(8px);opacity:.85;transition:transform .2s ease-out,opacity .2s ease-out,background-color .2s,color .2s;touch-action:none;user-select:none}
 .dock:hover .main,.main:focus-visible,.dock[data-open=true] .main,.dock[data-dragging=true] .main{transform:none;opacity:1}
-.main:focus-visible{outline:2px solid #83a878;outline-offset:2px}
+.main:focus-visible{outline:2px solid #7fa9dd;outline-offset:2px}
 .mark{font:700 17px Georgia,serif;pointer-events:none}
-.dock[data-state=active] .main{background:#426951;border-color:#426951;color:#fff}
+.dock[data-state=active] .main{background:#4a7fc4;border-color:#4a7fc4;color:#fff}
 .ring{position:absolute;left:4px;top:4px;width:30px;height:30px;border-radius:50%;border:2px solid transparent;border-top-color:currentColor;opacity:0;pointer-events:none}
 .dock[data-state=running] .ring{opacity:.75;animation:spin .9s linear infinite}
-.dock[data-state=failed] .main::after{content:"";position:absolute;left:6px;top:5px;width:8px;height:8px;border-radius:50%;background:#d0674a;border:1.5px solid #fbfcf7}
-.close{position:absolute;left:-8px;top:-8px;width:18px;height:18px;padding:0;border:1px solid #cddbc8;border-radius:50%;background:#fff;color:#7a8676;font:13px/15px -apple-system,sans-serif;cursor:pointer;opacity:0;transform:scale(.7);transition:opacity .15s,transform .15s;pointer-events:none}
+.dock[data-state=failed] .main::after{content:"";position:absolute;left:6px;top:5px;width:8px;height:8px;border-radius:50%;background:#d0674a;border:1.5px solid #f7faff}
+.close{position:absolute;left:-8px;top:-8px;width:18px;height:18px;padding:0;border:1px solid #c8d9ee;border-radius:50%;background:#fff;color:#74848f;font:13px/15px -apple-system,sans-serif;cursor:pointer;opacity:0;transform:scale(.7);transition:opacity .15s,transform .15s;pointer-events:none}
 .dock:hover .close,.close:focus-visible,.dock[data-open=true] .close{opacity:1;transform:none;pointer-events:auto}
 .dock[data-dragging=true] .close{opacity:0;pointer-events:none}
-.close:hover{color:#3e664b;border-color:#9fb79a}
-.menu{position:absolute;right:52px;top:50%;width:150px;padding:6px;border-radius:12px;background:#fbfcf7;box-shadow:0 6px 24px rgba(40,60,45,.2);transform:translateY(-50%);animation:pop .16s ease-out}
-.menu button{display:block;width:100%;padding:7px 10px;border:0;border-radius:8px;background:transparent;color:#344b3c;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:left;cursor:pointer}
-.menu button:hover,.menu button:focus-visible{background:#edf3e8;outline:none}
-.menu p{margin:4px 10px 2px;color:#8a9586;font-size:11px}
-.toast{position:absolute;right:8px;top:50%;width:max-content;max-width:220px;padding:8px 12px;border-radius:10px;background:#344b3c;color:#fff;font:12px/1.5 -apple-system,sans-serif;transform:translateY(-50%);animation:pop .16s ease-out}
+.close:hover{color:#3f74c4;border-color:#a9c4e4}
+.menu{position:absolute;right:52px;top:50%;width:150px;padding:6px;border-radius:12px;background:#f7faff;box-shadow:0 6px 24px rgba(31,42,51,.2);transform:translateY(-50%);animation:pop .16s ease-out}
+.menu button{display:block;width:100%;padding:7px 10px;border:0;border-radius:8px;background:transparent;color:#2c3a46;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:left;cursor:pointer}
+.menu button:hover,.menu button:focus-visible{background:#eef5fd;outline:none}
+.menu p{margin:4px 10px 2px;color:#84949f;font-size:11px}
+.toast{position:absolute;right:8px;top:50%;width:max-content;max-width:220px;padding:8px 12px;border-radius:10px;background:#2c3a46;color:#fff;font:12px/1.5 -apple-system,sans-serif;transform:translateY(-50%);animation:pop .16s ease-out}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pop{from{opacity:0;transform:translateY(-50%) scale(.96)}}
 @media (prefers-reduced-motion:reduce){.main,.close{transition:none}.menu,.toast{animation:none}.dock[data-state=running] .ring{animation-duration:2.4s}}

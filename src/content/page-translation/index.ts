@@ -268,8 +268,8 @@ export class PageTranslation {
         right: '18px',
         bottom: '18px',
         zIndex: '2147483647',
-        background: '#fbfaf6',
-        color: '#344b3c',
+        background: '#f8fbff',
+        color: '#2c3a46',
         borderRadius: '12px',
         padding: '10px 14px',
         boxShadow: '0 4px 20px #0002',
@@ -298,7 +298,7 @@ export class PageTranslation {
     Object.assign(cancel.style, {
       border: '0',
       background: 'transparent',
-      color: '#5c7f6e',
+      color: '#4a7fc4',
       cursor: 'pointer',
       padding: '2px 5px',
       font: 'inherit'
@@ -358,7 +358,7 @@ export class PageTranslation {
                 inserted.style.opacity = '0.65'
               if (this.preferences.style === 'boxed')
                 Object.assign(inserted.style, {
-                  background: '#edf3e8',
+                  background: '#eef5fd',
                   padding: '8px 12px',
                   borderRadius: '8px'
                 })

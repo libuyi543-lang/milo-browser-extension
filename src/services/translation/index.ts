@@ -9,4 +9,5 @@ export const translateWord = (
   context?: string
 ) => provider.translate(text, sessionId, context)
 export { cancelTranslation } from './cancel'
+export { speak, stopSpeaking } from './speech'
 export { TranslationProvider, TranslationResult } from './TranslationProvider'

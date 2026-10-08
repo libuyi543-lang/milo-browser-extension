@@ -46,14 +46,14 @@ export const READY_STATUS = '双语字幕已开启 · 鼠标移到字幕上暂�
 const STYLE = `
 :host{all:initial}
 *{box-sizing:border-box}
-.box{pointer-events:auto;display:inline-block;max-width:100%;padding:5px 14px 7px;border-radius:8px;background:rgba(16,24,19,.76);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.42;text-align:center;transition:background-color .15s ease-out;cursor:default}
-.box:hover{background:rgba(16,24,19,.9)}
+.box{pointer-events:auto;display:inline-block;max-width:100%;padding:5px 14px 7px;border-radius:8px;background:rgba(230,240,252,.94);color:#1f2a33;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.42;text-align:center;transition:background-color .15s ease-out;cursor:default}
+.box:hover{background:#f2f8ff}
 .box[hidden]{display:none}
 .source{font-weight:500;overflow-wrap:anywhere}
 .w{padding:0 1px;border-radius:4px;cursor:pointer;transition:background-color .12s,color .12s}
-.w.saved{box-shadow:inset 0 -.14em #e8c34f;color:#fff6d6}
-.w:hover,.w[data-active=true]{background:#f2d36b;color:#1b281e;box-shadow:none}
-.target{margin-top:2px;font-size:1em;color:#e6efe1;overflow-wrap:anywhere;transition:filter .18s ease-out}
+.w.saved{box-shadow:inset 0 -.14em #e8c34f;color:#7a5d0c}
+.w:hover,.w[data-active=true]{background:#c9dcf2;color:#16202b;box-shadow:none}
+.target{margin-top:2px;font-size:1em;color:#52657a;overflow-wrap:anywhere;transition:filter .18s ease-out}
 :host([data-learning]) .box:not(:hover) .target:not([data-pending=true]){filter:blur(.32em)}
 .target:empty{display:none}
 .target[data-pending=true]{opacity:.45}

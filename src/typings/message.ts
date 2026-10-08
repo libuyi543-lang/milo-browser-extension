@@ -105,6 +105,10 @@ export type MessageConfig = MessageConfigType<{
     payload: { text: string; context?: string; sessionId?: string }
     response: { result?: TranslationResult; error?: string }
   }
+  MILO_SPEAK: {
+    payload: { text: string; lang: string }
+    response: { audio?: string; error?: string }
+  }
   MILO_TRANSLATE_INPUT: {
     payload: { text: string; sessionId: string }
     response: { text?: string; error?: string }

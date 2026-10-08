@@ -19,6 +19,7 @@ import {
 } from './preferences'
 import { startDesktopActions } from './desktop-actions'
 import { startYouTubeCaptionsServer } from './youtube-captions'
+import { speakText } from './speech'
 import { startStoreRelay } from './store-relay'
 
 // Keep the original extension message bridge, including PAGE_INFO and iframe routing.
@@ -139,6 +140,15 @@ message.addListener('MILO_TRANSLATE_WORD', async (msg, sender) => {
       result: await withSession(msg.payload.sessionId, sender, signal =>
         translateWordWithAI(msg.payload.text, signal, msg.payload.context)
       )
+    }
+  } catch (error) {
+    return { error: error.message }
+  }
+})
+message.addListener('MILO_SPEAK', async msg => {
+  try {
+    return {
+      audio: await speakText(msg.payload.text, msg.payload.lang)
     }
   } catch (error) {
     return { error: error.message }

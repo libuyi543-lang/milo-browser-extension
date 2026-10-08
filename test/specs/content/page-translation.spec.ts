@@ -25,6 +25,36 @@ describe('natural inline page translation', () => {
     expect(document.body.innerHTML).toBe(original)
   })
 
+  it('keeps a caption inside the container when the text lives in a summary', async () => {
+    document.body.innerHTML = '<main><details><summary>What the painter was given · 15 items</summary><p>Everything this painter was told.</p></details></main>'
+    const translator = jest.fn(async items => items.map(item => ({ id: item.id, text: '画家所获之物 · 15 项' })))
+    const controller = new PageTranslation(translator)
+    controller.toggle()
+    await Promise.resolve()
+    const caption = document.querySelector('[data-milo-translation]')!
+    expect(caption).not.toBeNull()
+    const details = document.querySelector('details')!
+    expect(details.contains(caption)).toBe(true)
+    expect(document.querySelector('main')!.nextElementSibling).toBeNull()
+    controller.clear()
+  })
+
+  it('spans the whole row when a caption sits inside a grid layout', async () => {
+    document.body.innerHTML = '<ol><li><span>Day 1, 09:00</span><span>Starting from a warm ground, I am planning a quiet lake.</span></li></ol>'
+    const item = document.querySelector('li')!
+    item.style.display = 'grid'
+    item.style.gridTemplateColumns = '118px 1fr'
+    const translator = jest.fn(async items => items.map(item => ({ id: item.id, text: '第1天，09:00 从一层温暖的地面开始，我打算画一片安静的湖。' })))
+    const controller = new PageTranslation(translator)
+    controller.toggle()
+    await Promise.resolve()
+    const caption = document.querySelector('[data-milo-translation]') as HTMLElement
+    expect(caption).not.toBeNull()
+    expect(caption.style.gridColumn).toBe('1 / -1')
+    expect(item.contains(caption)).toBe(true)
+    controller.clear()
+  })
+
   it('ignores an in-flight result after the user restores the page', async () => {
     document.body.innerHTML = '<p>English paragraph to translate.</p>'
     let finish: (value: Array<{ id: string; text: string }>) => void = () => undefined

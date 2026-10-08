@@ -1,7 +1,7 @@
 const SKIP =
   'script,style,noscript,iframe,svg,canvas,pre,code,input,textarea,select,button,form,nav,aside,body>header,body>footer,[role="button"],[role="menu"],[role="menubar"],[role="tablist"],[role="navigation"],[role="complementary"],[role="banner"],[role="contentinfo"],[data-testid="tweet-text-show-more-link"],[contenteditable]:not([contenteditable="false"]),[translate="no"],[hidden],[aria-hidden="true"],[data-milo-translation],#milo-word-popup-root,.milo-external'
 const SEMANTIC = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,figcaption,td,th,dt,dd'
-const BLOCK = /^(DIV|SECTION|ARTICLE|MAIN|ASIDE|HEADER|FOOTER|NAV|BODY)$/
+const BLOCK = /^(DIV|SECTION|ARTICLE|MAIN|ASIDE|HEADER|FOOTER|NAV|DETAILS|BODY)$/
 export interface ReadingParagraph {
   element: HTMLElement
   text: string
@@ -23,6 +23,32 @@ export function isReadingText(text: string, target = 'zh-CN') {
   if (target === 'ja' && /[\u3040-\u30ff]/.test(text)) return false
   if (target === 'ko' && /[\uac00-\ud7af]/.test(text)) return false
   return true
+}
+
+/**
+ * Where the caption goes. Normally inside the paragraph, but when the paragraph
+ * is a container rather than a text element — a `<details>` whose text lives in
+ * its `<summary>`, for instance — the caption belongs after the text's own
+ * block so it stays inside the container instead of escaping the layout.
+ */
+function captionAnchor(element: HTMLElement, nodes: Text[]): HTMLElement {
+  if (SEMANTIC.split(',').includes(element.tagName)) return element
+  const parent = nodes[0] && nodes[0].parentElement
+  if (parent && parent !== element && isBlockLevel(parent)) return parent
+  return element
+}
+
+/**
+ * A grid or flex container turns its children into blocks, so an inline
+ * `<span>` inside one computes as block-level. The caption still must not land
+ * there: as a grid item in a two-column row it would be squeezed into the
+ * narrow column, which is the very layout the caption is supposed to span.
+ */
+function isBlockLevel(element: HTMLElement) {
+  const display = getComputedStyle(element).display
+  if (display === 'inline' || display === 'contents') return false
+  const parent = element.parentElement
+  return !!parent && !/grid|flex/.test(getComputedStyle(parent).display)
 }
 
 function visible(
@@ -148,18 +174,23 @@ export function insertTranslation(
   )
     return null
   const element = paragraph.element
+  const anchor = captionAnchor(element, paragraph.nodes)
   const translated = document.createElement('div')
   translated.dataset.miloTranslation = 'true'
   translated.setAttribute('translate', 'no')
   translated.lang = 'zh-CN'
   translated.textContent = text
   const sourceStyle = getComputedStyle(element)
-  const parentDisplay = element.parentElement
-    ? getComputedStyle(element.parentElement).display
-    : ''
+  // A caption placed inside its own container has to claim a whole row: the
+  // container may be a grid or flex layout that would otherwise squeeze it into
+  // one narrow column beside the text it translates.
+  const containerDisplay = getComputedStyle(anchor).display
   const inside =
-    /^(LI|TD|TH|DD|DT|BODY)$/.test(element.tagName) ||
-    /flex|grid/.test(parentDisplay)
+    /^(LI|TD|TH|DD|DT|BODY)$/.test(anchor.tagName) ||
+    /flex|grid/.test(
+      anchor.parentElement ? getComputedStyle(anchor.parentElement).display : ''
+    )
+  const ownGrid = /grid/.test(containerDisplay)
   const size = captionSize(element, inside)
   const family = sourceStyle.fontFamily.replace(GENERIC_FAMILY, '').trim()
   Object.assign(translated.style, {
@@ -187,9 +218,14 @@ export function insertTranslation(
     height: 'auto',
     maxWidth: '100%',
     background: 'none',
-    border: '0'
+    border: '0',
+    // 独占一整行，别被容器塞进标题旁边那条窄列。
+    ...(ownGrid ? { gridColumn: '1 / -1' } : {}),
+    ...(inside && !ownGrid && /flex/.test(containerDisplay)
+      ? { flexBasis: '100%' }
+      : {})
   })
-  if (inside) element.appendChild(translated)
-  else element.insertAdjacentElement('afterend', translated)
+  if (inside) anchor.appendChild(translated)
+  else anchor.insertAdjacentElement('afterend', translated)
   return translated
 }
